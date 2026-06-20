@@ -1,0 +1,276 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+
+@custom-variant dark (&:is(.dark *));
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: var(--font-poppins);
+  --color-border: var(--border);
+  --color-primary: var(--primary);
+}
+
+:root {
+  /* Base colors from mobile app */
+  --background: #f6f4f1;
+  --foreground: #1c1c2e;
+  --border: #e8e8f0;
+  --primary: #4fc3f7;
+  --accent: #22d3ee;
+  
+  /* Warm pastel cards (ExperimentalPalette) */
+  --nm-page: #f6f4f1;
+  --nm-cream: #ffffff;
+  --nm-blush: #fff0f3;
+  --nm-blush-deep: #ffe8ee;
+  --nm-lavender: #f3eeff;
+  --nm-lavender-deep: #e8deff;
+  --nm-mint: #ecf9f2;
+  --nm-peach: #fff4ec;
+  --nm-butter: #fff6d6;
+  --nm-coral: #e8876a;
+  
+  /* Text & functional colors */
+  --nm-ink: #1c1c2e;
+  --nm-ink-soft: rgba(28, 28, 46, 0.55);
+  --nm-text-secondary: #6b7280;
+  --nm-card-shadow: rgba(28, 28, 46, 0.06);
+  
+  /* Brand colors */
+  --nm-sky-blue: #4fc3f7;
+  --nm-cyan: #22d3ee;
+  --nm-success: #30d158;
+  --nm-danger: #ef4444;
+  
+  /* UI elements */
+  --nm-border: #e8e8f0;
+  --nm-card-bg: #ffffff;
+  --nm-secondary: #f3f4f6;
+  --nm-module-bg: #f3f4f8;
+  
+  /* Radius */
+  --radius-lg: 24px;
+  --radius-md: 18px;
+  --radius-sm: 14px;
+  --radius-pill: 999px;
+}
+
+.dark {
+  /* Base colors */
+  --background: #000000;
+  --foreground: #ffffff;
+  --border: #1f1f1f;
+  --primary: #22d3ee;
+  --accent: #22d3ee;
+  
+  /* Dark pastel cards */
+  --nm-page: #000000;
+  --nm-cream: #141414;
+  --nm-blush: #221820;
+  --nm-blush-deep: #2a1c22;
+  --nm-lavender: #1a1828;
+  --nm-lavender-deep: #252038;
+  --nm-mint: #122018;
+  --nm-peach: #221a14;
+  --nm-butter: #221e14;
+  --nm-coral: #c96a48;
+  
+  /* Text & functional colors */
+  --nm-ink: #ffffff;
+  --nm-ink-soft: rgba(255, 255, 255, 0.62);
+  --nm-text-secondary: #a1a1aa;
+  --nm-card-shadow: rgba(0, 0, 0, 0.45);
+  
+  /* Brand colors */
+  --nm-sky-blue: #22d3ee;
+  --nm-cyan: #22d3ee;
+  --nm-success: #30d158;
+  --nm-danger: #ff6961;
+  
+  /* UI elements */
+  --nm-border: #1f1f1f;
+  --nm-card-bg: #111111;
+  --nm-secondary: #161616;
+  --nm-module-bg: #161616;
+}
+
+@layer base {
+  html {
+    @apply antialiased;
+    scroll-behavior: smooth;
+  }
+  body {
+    @apply bg-background text-foreground;
+    font-family: 'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  }
+}
+
+.font-poppins {
+  font-family: var(--font-poppins), 'Poppins', system-ui, sans-serif;
+}
+
+.font-jakarta {
+  font-family: var(--font-jakarta), 'Plus Jakarta Sans', system-ui, sans-serif;
+}
+
+/* Warm pastel module utilities */
+.nm-module {
+  border-radius: var(--radius-lg);
+  box-shadow: 0 4px 16px var(--nm-card-shadow);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.nm-module.cream { background: var(--nm-cream); }
+.nm-module.blush { background: var(--nm-blush); }
+.nm-module.lavender { background: var(--nm-lavender); }
+.nm-module.mint { background: var(--nm-mint); }
+.nm-module.peach { background: var(--nm-peach); }
+.nm-module.butter { background: var(--nm-butter); }
+
+.nm-module:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px var(--nm-card-shadow);
+}
+
+/* Button styles matching mobile */
+.nm-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  border: none;
+  border-radius: var(--radius-pill);
+  padding: 12px 24px;
+  font-family: 'Poppins', sans-serif;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.nm-btn-primary {
+  background: var(--nm-sky-blue);
+  color: var(--nm-ink);
+}
+
+.nm-btn-primary:hover {
+  background: var(--nm-cyan);
+  transform: translateY(-1px);
+}
+
+.nm-btn-dark {
+  background: var(--nm-ink);
+  color: var(--nm-cream);
+}
+
+.nm-btn-dark:hover {
+  opacity: 0.9;
+  transform: translateY(-1px);
+}
+
+.nm-btn-outline {
+  background: transparent;
+  border: 2px solid var(--nm-border);
+  color: var(--nm-ink);
+}
+
+.nm-btn-outline:hover {
+  background: var(--nm-secondary);
+}
+
+/* ── Prose editor (note detail) ──────────────────────────────────── */
+.prose-editor:empty:before {
+  content: attr(data-placeholder);
+  pointer-events: none;
+  color: rgba(28, 28, 46, 0.28);
+}
+
+.dark .prose-editor:empty:before {
+  color: rgba(255, 255, 255, 0.28);
+}
+
+.prose-editor h1 {
+  font-size: 1.5rem;
+  font-weight: 700;
+  line-height: 1.3;
+  margin: 0.75em 0 0.4em;
+  font-family: 'Poppins', sans-serif;
+}
+
+.prose-editor h2 {
+  font-size: 1.15rem;
+  font-weight: 600;
+  line-height: 1.35;
+  margin: 0.65em 0 0.35em;
+  font-family: 'Poppins', sans-serif;
+}
+
+.prose-editor p {
+  margin: 0.35em 0;
+}
+
+.prose-editor ul,
+.prose-editor ol {
+  margin: 0.4em 0;
+  padding-left: 1.4em;
+}
+
+.prose-editor li {
+  margin: 0.2em 0;
+}
+
+.prose-editor blockquote {
+  border-left: 3px solid currentColor;
+  margin: 0.6em 0;
+  padding: 0.35em 0 0.35em 1em;
+  opacity: 0.7;
+  font-style: italic;
+}
+
+.prose-editor b,
+.prose-editor strong {
+  font-weight: 700;
+}
+
+.prose-editor i,
+.prose-editor em {
+  font-style: italic;
+}
+
+.prose-editor u {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.prose-editor a {
+  color: #4fc3f7;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.prose-editor img {
+  max-width: 100%;
+  border-radius: 12px;
+  margin: 0.5em 0;
+  display: block;
+}
+
+/* ── Infinity canvas dot grid (note editor) ─────────────────────── */
+.canvas-grid {
+  background-image: radial-gradient(rgba(28, 28, 46, 0.08) 1.2px, transparent 1.2px);
+  background-size: 28px 28px;
+}
+
+.dark .canvas-grid {
+  background-image: radial-gradient(rgba(255, 255, 255, 0.12) 1.2px, transparent 1.2px);
+}
+
+@keyframes brain-bob {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-4px); }
+}
+
+.animate-brain-bob {
+  animation: brain-bob 1.7s ease-in-out infinite;
+}

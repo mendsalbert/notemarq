@@ -1,0 +1,42 @@
+import { NextResponse } from 'next/server';
+
+/** Proxy preview images so the client can sample colors without CORS blocks. */
+export async function GET(request: Request) {
+  const { searchParams } = new URL(request.url);
+  const imageUrl = searchParams.get('url')?.trim();
+
+  if (!imageUrl) {
+    return NextResponse.json({ error: 'Missing url' }, { status: 400 });
+  }
+
+  try {
+    const parsed = new URL(imageUrl);
+    if (!['http:', 'https:'].includes(parsed.protocol)) {
+      return NextResponse.json({ error: 'Invalid url' }, { status: 400 });
+    }
+
+    const response = await fetch(imageUrl, {
+      headers: { Accept: 'image/*' },
+      signal: AbortSignal.timeout(8000),
+    });
+
+    if (!response.ok) {
+      return NextResponse.json({ error: 'Image fetch failed' }, { status: 502 });
+    }
+
+    const contentType = response.headers.get('content-type') ?? 'image/jpeg';
+    const buffer = await response.arrayBuffer();
+
+    return new NextResponse(buffer, {
+      headers: {
+        'Content-Type': contentType,
+        'Cache-Control': 'public, max-age=86400',
+      },
+    });
+  } catch (error) {
+    return NextResponse.json(
+      { error: error instanceof Error ? error.message : 'Proxy failed' },
+      { status: 500 },
+    );
+  }
+}
