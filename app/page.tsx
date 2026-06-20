@@ -2,6 +2,7 @@
 
 import React, { useEffect, useState } from 'react';
 import Image from 'next/image';
+import Link from 'next/link';
 import {
   IconArrowRight,
   IconBolt,
@@ -85,7 +86,7 @@ function NotemarqLogo({ className = '', size = 'md' }: { className?: string; siz
   const text = size === 'sm' ? 'text-base font-bold' : 'text-lg font-bold';
 
   return (
-    <a
+    <Link
       href="/#top"
       className={`inline-flex items-center gap-2 ${className}`}
       style={{ color: TEXT, letterSpacing: '-0.02em' }}
@@ -105,7 +106,7 @@ function NotemarqLogo({ className = '', size = 'md' }: { className?: string; siz
         />
       </span>
       <span className={`${text} tracking-tight`}>notemarq</span>
-    </a>
+    </Link>
   );
 }
 
