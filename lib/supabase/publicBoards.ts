@@ -7,6 +7,7 @@ function mapPublicBoard(payload: Record<string, unknown>): PublicIdeaBoard {
   const folder = payload.folder as Record<string, unknown>;
   const owner = payload.owner as Record<string, unknown>;
   const bookmarks = (payload.bookmarks as Record<string, unknown>[] | null) ?? [];
+  const notes = (payload.notes as Record<string, unknown>[] | null) ?? [];
 
   return {
     folder: {
@@ -42,6 +43,16 @@ function mapPublicBoard(payload: Record<string, unknown>): PublicIdeaBoard {
       previewText: bookmark.preview_text ? String(bookmark.preview_text) : null,
       dateAdded: String(bookmark.date_added ?? ''),
     })),
+    notes: notes.map((note) => ({
+      id: String(note.id),
+      name: String(note.name ?? ''),
+      description: String(note.description ?? ''),
+      color: String(note.color ?? '#78D7FF'),
+      icon: String(note.icon ?? 'document-text-outline'),
+      content: String(note.content ?? ''),
+      createdAt: String(note.created_at ?? ''),
+      updatedAt: String(note.updated_at ?? ''),
+    })),
   };
 }
 
@@ -71,6 +82,7 @@ export async function forkPublicIdeaBoard(folderId: string): Promise<ForkPublicB
   return {
     folderId: String(payload.folder_id),
     bookmarkCount: payload.bookmark_count != null ? Number(payload.bookmark_count) : undefined,
+    noteCount: payload.note_count != null ? Number(payload.note_count) : undefined,
     alreadyForked: Boolean(payload.already_forked),
     sourceOwner: payload.source_owner ? String(payload.source_owner) : undefined,
   };

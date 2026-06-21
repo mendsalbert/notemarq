@@ -1,18 +1,25 @@
 'use client';
 
 import { IconPlus } from '@tabler/icons-react';
+import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 
 import { AddBookmarkDialog } from '@/components/app/add-bookmark-dialog';
 import { AppHeader } from '@/components/app/app-header';
 import { AppSidebar } from '@/components/app/app-sidebar';
+import { useAuth } from '@/contexts/auth-provider';
 import { useAppColors } from '@/hooks/use-app-colors';
 import { cn } from '@/lib/utils';
+import { useAppStore } from '@/store/app-store';
 
 export function AppShell({ children }: { children: React.ReactNode }) {
+  const router = useRouter();
+  const { user } = useAuth();
+  const addNote = useAppStore((s) => s.addNote);
   const { colors } = useAppColors();
   const [addOpen, setAddOpen] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [creatingNote, setCreatingNote] = useState(false);
 
   useEffect(() => {
     function openAdd() {
@@ -26,6 +33,18 @@ export function AppShell({ children }: { children: React.ReactNode }) {
     setSidebarOpen(false);
   }
 
+  async function handleAddNote() {
+    if (!user?.id || creatingNote) return;
+    setCreatingNote(true);
+    closeSidebar();
+    try {
+      const note = await addNote(user.id, { name: 'Untitled note' });
+      router.push(`/app/notes/${note.id}`);
+    } finally {
+      setCreatingNote(false);
+    }
+  }
+
   return (
     <div
       className="flex min-h-screen transition-colors"
@@ -36,7 +55,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         className="hidden shrink-0 border-r md:block"
         style={{ borderColor: colors.border }}
       >
-        <AppSidebar onAddBookmark={() => setAddOpen(true)} className="sticky top-0 h-screen" />
+        <AppSidebar onAddBookmark={() => setAddOpen(true)} onAddNote={() => void handleAddNote()} className="sticky top-0 h-screen" />
       </div>
 
       {/* Main column */}
@@ -63,6 +82,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                 setAddOpen(true);
                 closeSidebar();
               }}
+              onAddNote={() => void handleAddNote()}
               onNavigate={closeSidebar}
               className="h-full overflow-y-auto pt-16"
             />

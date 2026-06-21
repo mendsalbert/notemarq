@@ -31,6 +31,7 @@ import {
 } from '@tabler/icons-react';
 
 import { KeepBookmarkCard } from '@/components/app/keep-bookmark-card';
+import { PinToggleButton } from '@/components/app/pin-toggle-button';
 import { useAppColors } from '@/hooks/use-app-colors';
 import { useAppStore } from '@/store/app-store';
 import {
@@ -115,6 +116,7 @@ export function NoteDetailView({ id }: { id: string }) {
   const folders = useAppStore((s) => s.folders);
   const updateNote = useAppStore((s) => s.updateNote);
   const deleteNote = useAppStore((s) => s.deleteNote);
+  const togglePinNote = useAppStore((s) => s.togglePinNote);
 
   const note = notes.find((n) => n.id === id);
   const linked = useMemo(
@@ -285,8 +287,8 @@ export function NoteDetailView({ id }: { id: string }) {
     <div className="relative mx-auto w-full max-w-[1400px] px-4 py-5 md:px-6 md:py-6">
       <div className="canvas-grid pointer-events-none absolute inset-0" />
 
-      {/* Header — back only */}
-      <header className="relative z-10 mb-5">
+      {/* Header */}
+      <header className="relative z-10 mb-5 flex items-center justify-between gap-3">
         <Link
           href="/app/notes"
           className="inline-flex h-9 w-9 items-center justify-center rounded-full transition hover:scale-105"
@@ -295,6 +297,10 @@ export function NoteDetailView({ id }: { id: string }) {
         >
           <IconArrowLeft size={18} stroke={2} style={{ color: colors.text }} />
         </Link>
+        <PinToggleButton
+          pinned={note.isPinned}
+          onToggle={() => void togglePinNote(note.id)}
+        />
       </header>
 
       {/* Note card */}

@@ -14,6 +14,7 @@ import {
   updateBookmarkRow,
 } from '@/lib/supabase/data';
 import { describeSupabaseError } from '@/lib/supabase/errors';
+import { alertPinLimitReached, canPinMore } from '@/lib/pin-limits';
 import type { Bookmark, Folder, Note } from '@/lib/types';
 
 interface AppStore {
@@ -50,8 +51,12 @@ interface AppStore {
   deleteNote: (id: string) => Promise<void>;
   updateBookmark: (
     id: string,
-    updates: Partial<Pick<Bookmark, 'saveReason' | 'personalContext'>>,
+    updates: Partial<Pick<Bookmark, 'saveReason' | 'personalContext' | 'isFavorite' | 'isPinned'>>,
   ) => Promise<void>;
+  toggleFavorite: (id: string) => Promise<void>;
+  togglePinBookmark: (id: string) => Promise<void>;
+  togglePinNote: (id: string) => Promise<void>;
+  togglePinFolder: (id: string) => Promise<void>;
   deleteBookmark: (id: string) => Promise<void>;
 }
 
@@ -278,6 +283,8 @@ export const useAppStore = create<AppStore>((set, get) => ({
       const rowUpdates: Parameters<typeof updateBookmarkRow>[2] = {};
       if (updates.saveReason !== undefined) rowUpdates.save_reason = updates.saveReason;
       if (updates.personalContext !== undefined) rowUpdates.personal_context = updates.personalContext;
+      if (updates.isFavorite !== undefined) rowUpdates.is_favorite = updates.isFavorite;
+      if (updates.isPinned !== undefined) rowUpdates.is_pinned = updates.isPinned;
 
       const updated = await updateBookmarkRow(userId, id, rowUpdates);
       set((state) => ({
@@ -288,6 +295,108 @@ export const useAppStore = create<AppStore>((set, get) => ({
     } catch (error) {
       console.error('[web appStore] updateBookmark failed:', error);
       set({ bookmarks: previous });
+    }
+  },
+
+  toggleFavorite: async (id) => {
+    const bookmark = get().bookmarks.find((item) => item.id === id);
+    if (!bookmark) return;
+    await get().updateBookmark(id, { isFavorite: !bookmark.isFavorite });
+  },
+
+  togglePinBookmark: async (id) => {
+    const userId = get().userId;
+    if (!userId) return;
+
+    const bookmark = get().bookmarks.find((item) => item.id === id);
+    if (!bookmark) return;
+
+    const nextPinned = !bookmark.isPinned;
+    if (nextPinned && !canPinMore(get().bookmarks, get().notes, get().folders)) {
+      alertPinLimitReached();
+      return;
+    }
+
+    const previous = get().bookmarks;
+    set((state) => ({
+      bookmarks: state.bookmarks.map((item) =>
+        item.id === id ? { ...item, isPinned: nextPinned } : item,
+      ),
+    }));
+
+    try {
+      const updated = await updateBookmarkRow(userId, id, { is_pinned: nextPinned });
+      set((state) => ({
+        bookmarks: state.bookmarks.map((item) => (item.id === id ? updated : item)),
+      }));
+    } catch (error) {
+      console.error('[web appStore] togglePinBookmark failed:', error);
+      set({ bookmarks: previous });
+    }
+  },
+
+  togglePinNote: async (id) => {
+    const userId = get().userId;
+    if (!userId) return;
+
+    const note = get().notes.find((item) => item.id === id);
+    if (!note) return;
+
+    const nextPinned = !note.isPinned;
+    if (nextPinned && !canPinMore(get().bookmarks, get().notes, get().folders)) {
+      alertPinLimitReached();
+      return;
+    }
+
+    const previous = get().notes;
+    set((state) => ({
+      notes: state.notes.map((item) =>
+        item.id === id ? { ...item, isPinned: nextPinned } : item,
+      ),
+    }));
+
+    try {
+      const updated = await updateNoteRow(userId, id, { is_pinned: nextPinned });
+      const bookmarkIds = previous.find((item) => item.id === id)?.bookmarks ?? [];
+      set((state) => ({
+        notes: state.notes.map((item) =>
+          item.id === id ? { ...updated, bookmarks: bookmarkIds } : item,
+        ),
+      }));
+    } catch (error) {
+      console.error('[web appStore] togglePinNote failed:', error);
+      set({ notes: previous });
+    }
+  },
+
+  togglePinFolder: async (id) => {
+    const userId = get().userId;
+    if (!userId) return;
+
+    const folder = get().folders.find((item) => item.id === id);
+    if (!folder) return;
+
+    const nextPinned = !folder.isPinned;
+    if (nextPinned && !canPinMore(get().bookmarks, get().notes, get().folders)) {
+      alertPinLimitReached();
+      return;
+    }
+
+    const previous = get().folders;
+    set((state) => ({
+      folders: state.folders.map((item) =>
+        item.id === id ? { ...item, isPinned: nextPinned } : item,
+      ),
+    }));
+
+    try {
+      const row = await updateFolderRow(userId, id, { is_pinned: nextPinned });
+      set((state) => ({
+        folders: state.folders.map((item) => (item.id === id ? row : item)),
+      }));
+    } catch (error) {
+      console.error('[web appStore] togglePinFolder failed:', error);
+      set({ folders: previous });
     }
   },
 }));

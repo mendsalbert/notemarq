@@ -13,6 +13,7 @@ export function bookmarkFromRow(row: DbBookmark, ideaId?: string): Bookmark {
     tags: row.tags ?? [],
     dateAdded: row.date_added,
     isFavorite: row.is_favorite,
+    isPinned: row.is_pinned ?? false,
     category: row.category,
     previewImage: row.preview_image ?? undefined,
     previewText: row.preview_text ?? undefined,
@@ -38,6 +39,7 @@ export function noteFromRow(row: DbNote, bookmarkIds: string[] = []): Note {
     icon: row.icon,
     notes: row.content,
     folderId: row.folder_id ?? undefined,
+    isPinned: row.is_pinned ?? false,
   };
 }
 
@@ -52,6 +54,7 @@ export function folderFromRow(row: DbFolder, itemCount = 0): Folder {
     emoji: row.emoji ?? undefined,
     kind: row.kind,
     itemCount,
+    isPinned: row.is_pinned ?? false,
     isPublic: row.is_public ?? false,
     publishedAt: row.published_at ?? undefined,
     forkCount: row.fork_count ?? 0,
@@ -244,10 +247,16 @@ function isMissingEmojiColumnError(error: { message?: string; code?: string } | 
   return error.code === '42703' || message.includes('emoji');
 }
 
+function isMissingPinnedColumnError(error: { message?: string; code?: string } | null) {
+  if (!error) return false;
+  const message = error.message?.toLowerCase() ?? '';
+  return error.code === '42703' || error.code === 'PGRST204' || message.includes('is_pinned');
+}
+
 export async function updateFolderRow(
   userId: string,
   id: string,
-  updates: Partial<Pick<DbFolder, 'name' | 'description' | 'color' | 'emoji' | 'kind'>>,
+  updates: Partial<Pick<DbFolder, 'name' | 'description' | 'color' | 'emoji' | 'kind' | 'is_pinned'>>,
 ): Promise<Folder> {
   const first = await supabase
     .from('folders')
@@ -259,6 +268,19 @@ export async function updateFolderRow(
 
   if (!first.error && first.data) {
     return folderFromRow(first.data as DbFolder);
+  }
+
+  if (isMissingPinnedColumnError(first.error) && updates.is_pinned !== undefined) {
+    const { is_pinned: _ignored, ...withoutPin } = updates;
+    const retry = await supabase
+      .from('folders')
+      .update(withoutPin)
+      .eq('id', id)
+      .eq('user_id', userId)
+      .select('*')
+      .single();
+    if (retry.error) throw retry.error;
+    return folderFromRow(retry.data as DbFolder);
   }
 
   if (isMissingEmojiColumnError(first.error) && updates.emoji !== undefined) {
@@ -295,9 +317,11 @@ export async function deleteBookmarkRow(userId: string, id: string): Promise<voi
 export async function updateBookmarkRow(
   userId: string,
   id: string,
-  updates: Partial<Pick<DbBookmark, 'save_reason' | 'personal_context'>>,
+  updates: Partial<
+    Pick<DbBookmark, 'save_reason' | 'personal_context' | 'is_favorite' | 'is_pinned' | 'folder_id' | 'tags'>
+  >,
 ): Promise<Bookmark> {
-  const { data, error } = await supabase
+  const first = await supabase
     .from('bookmarks')
     .update(updates)
     .eq('id', id)
@@ -305,16 +329,32 @@ export async function updateBookmarkRow(
     .select('*')
     .single();
 
-  if (error) throw error;
-  return bookmarkFromRow(data as DbBookmark);
+  if (!first.error && first.data) {
+    return bookmarkFromRow(first.data as DbBookmark);
+  }
+
+  if (isMissingPinnedColumnError(first.error) && updates.is_pinned !== undefined) {
+    const { is_pinned: _ignored, ...withoutPin } = updates;
+    const retry = await supabase
+      .from('bookmarks')
+      .update(withoutPin)
+      .eq('id', id)
+      .eq('user_id', userId)
+      .select('*')
+      .single();
+    if (retry.error) throw retry.error;
+    return bookmarkFromRow(retry.data as DbBookmark);
+  }
+
+  throw first.error;
 }
 
 export async function updateNoteRow(
   userId: string,
   id: string,
-  updates: Partial<Pick<DbNote, 'name' | 'description' | 'color' | 'icon' | 'content'>>,
+  updates: Partial<Pick<DbNote, 'name' | 'description' | 'color' | 'icon' | 'content' | 'is_pinned' | 'folder_id'>>,
 ): Promise<Note> {
-  const { data, error } = await supabase
+  const first = await supabase
     .from('notes')
     .update(updates)
     .eq('id', id)
@@ -322,8 +362,24 @@ export async function updateNoteRow(
     .select('*')
     .single();
 
-  if (error) throw error;
-  return noteFromRow(data as DbNote);
+  if (!first.error && first.data) {
+    return noteFromRow(first.data as DbNote);
+  }
+
+  if (isMissingPinnedColumnError(first.error) && updates.is_pinned !== undefined) {
+    const { is_pinned: _ignored, ...withoutPin } = updates;
+    const retry = await supabase
+      .from('notes')
+      .update(withoutPin)
+      .eq('id', id)
+      .eq('user_id', userId)
+      .select('*')
+      .single();
+    if (retry.error) throw retry.error;
+    return noteFromRow(retry.data as DbNote);
+  }
+
+  throw first.error;
 }
 
 export async function deleteNoteRow(userId: string, id: string): Promise<void> {

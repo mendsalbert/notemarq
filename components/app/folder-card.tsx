@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
-import { IconDots, IconPencil, IconTrash } from '@tabler/icons-react';
+import { IconDots, IconPinFilled, IconPencil, IconTrash } from '@tabler/icons-react';
 
 import { FolderFace } from '@/components/app/folder-face';
 import { LinkPreviewThumb } from '@/components/app/link-preview';
@@ -22,6 +22,7 @@ export function FolderCard({ folder, previews = [], index = 0 }: FolderCardProps
   const { colors } = useAppColors();
   const updateFolder = useAppStore((s) => s.updateFolder);
   const deleteFolder = useAppStore((s) => s.deleteFolder);
+  const togglePinFolder = useAppStore((s) => s.togglePinFolder);
   const [menuOpen, setMenuOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
 
@@ -103,6 +104,18 @@ export function FolderCard({ folder, previews = [], index = 0 }: FolderCardProps
             <button
               type="button"
               className="flex w-full items-center gap-2 px-3 py-2.5 font-poppins text-[13px] font-medium transition hover:opacity-80"
+              style={{ color: colors.text }}
+              onClick={() => {
+                setMenuOpen(false);
+                void togglePinFolder(folder.id);
+              }}
+            >
+              <IconPinFilled size={15} stroke={2} />
+              {folder.isPinned ? 'Unpin' : 'Pin'}
+            </button>
+            <button
+              type="button"
+              className="flex w-full items-center gap-2 px-3 py-2.5 font-poppins text-[13px] font-medium transition hover:opacity-80"
               style={{ color: colors.danger }}
               onClick={() => void handleDelete()}
             >
@@ -123,12 +136,17 @@ export function FolderCard({ folder, previews = [], index = 0 }: FolderCardProps
         />
 
         <div className="min-w-0 flex-1 pr-6">
-          <p
-            className="line-clamp-2 font-poppins text-[14px] font-bold leading-tight tracking-tight"
-            style={{ color: colors.text }}
-          >
-            {folder.name}
-          </p>
+          <div className="flex items-start gap-1.5">
+            <p
+              className="line-clamp-2 flex-1 font-poppins text-[14px] font-bold leading-tight tracking-tight"
+              style={{ color: colors.text }}
+            >
+              {folder.name}
+            </p>
+            {folder.isPinned ? (
+              <IconPinFilled size={14} stroke={2} style={{ color: colors.primary, flexShrink: 0 }} />
+            ) : null}
+          </div>
           <p className="mt-1 font-poppins text-[11px] font-medium" style={{ color: colors.inkSoft }}>
             {folder.itemCount} {countLabel}
           </p>

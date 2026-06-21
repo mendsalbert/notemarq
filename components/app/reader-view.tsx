@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation';
 import {
   IconArrowLeft,
   IconExternalLink,
+  IconStar,
   IconStarFilled,
   IconBookmark,
   IconBulb,
@@ -20,6 +21,7 @@ import {
 } from '@tabler/icons-react';
 
 import { LinkPreviewThumb, SourceIcon } from '@/components/app/link-preview';
+import { PinToggleButton } from '@/components/app/pin-toggle-button';
 import { useAppColors } from '@/hooks/use-app-colors';
 import { useImageAccent } from '@/hooks/use-image-accent';
 import { useAppStore } from '@/store/app-store';
@@ -166,6 +168,8 @@ export function ReaderView({ id }: { id: string }) {
   const notes = useAppStore((s) => s.notes);
   const folders = useAppStore((s) => s.folders);
   const updateBookmark = useAppStore((s) => s.updateBookmark);
+  const toggleFavorite = useAppStore((s) => s.toggleFavorite);
+  const togglePinBookmark = useAppStore((s) => s.togglePinBookmark);
   const deleteBookmark = useAppStore((s) => s.deleteBookmark);
   const bookmark = bookmarks.find((b) => b.id === id);
 
@@ -239,15 +243,38 @@ export function ReaderView({ id }: { id: string }) {
         >
           <IconArrowLeft size={18} stroke={2} style={{ color: colors.text }} />
         </Link>
-        <button
-          type="button"
-          onClick={() => void handleDelete()}
-          className="inline-flex items-center gap-2 rounded-full px-4 py-2 font-poppins text-[13px] font-semibold transition hover:opacity-80"
-          style={{ backgroundColor: colors.cream, color: colors.danger, boxShadow: `0 2px 8px ${colors.cardShadow}` }}
-        >
-          <IconTrash size={15} stroke={2} />
-          Delete
-        </button>
+        <div className="flex items-center gap-2">
+          <PinToggleButton
+            pinned={bookmark.isPinned}
+            onToggle={() => void togglePinBookmark(bookmark.id)}
+          />
+          <button
+            type="button"
+            onClick={() => void toggleFavorite(bookmark.id)}
+            className="inline-flex h-9 w-9 items-center justify-center rounded-full transition hover:scale-105"
+            style={{
+              backgroundColor: bookmark.isFavorite ? `${colors.cyan}22` : colors.cream,
+              color: bookmark.isFavorite ? colors.cyan : colors.text,
+              boxShadow: `0 2px 8px ${colors.cardShadow}`,
+            }}
+            aria-label={bookmark.isFavorite ? 'Remove from starred' : 'Star'}
+          >
+            {bookmark.isFavorite ? (
+              <IconStarFilled size={18} stroke={2} />
+            ) : (
+              <IconStar size={18} stroke={2} />
+            )}
+          </button>
+          <button
+            type="button"
+            onClick={() => void handleDelete()}
+            className="inline-flex items-center gap-2 rounded-full px-4 py-2 font-poppins text-[13px] font-semibold transition hover:opacity-80"
+            style={{ backgroundColor: colors.cream, color: colors.danger, boxShadow: `0 2px 8px ${colors.cardShadow}` }}
+          >
+            <IconTrash size={15} stroke={2} />
+            Delete
+          </button>
+        </div>
       </div>
 
       <article

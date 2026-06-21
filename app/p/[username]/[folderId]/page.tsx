@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 
 import { PublicBoardView } from '@/components/public/public-board-view';
+import { publicBoardUrl } from '@/lib/publicBoards';
 import { fetchPublicIdeaBoard } from '@/lib/supabase/publicBoards';
 
 interface PublicBoardPageProps {
@@ -21,11 +22,17 @@ export async function generateMetadata({ params }: PublicBoardPageProps): Promis
       title: `${board.folder.name} · ${board.owner.name ?? `@${board.owner.username}`} · notemarq`,
       description:
         board.folder.description ||
-        `${board.bookmarks.length} curated links with AI summaries on notemarq.`,
+        (board.folder.kind === 'notes'
+          ? `${board.notes.length} shared notes on notemarq.`
+          : `${board.bookmarks.length} curated links with AI summaries on notemarq.`),
+      alternates: {
+        canonical: publicBoardUrl(board.owner.username, board.folder.id),
+      },
       openGraph: {
         title: board.folder.name,
         description: board.folder.description || 'A public idea board on notemarq',
         type: 'website',
+        url: publicBoardUrl(board.owner.username, board.folder.id),
       },
     };
   } catch {

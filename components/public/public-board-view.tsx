@@ -4,11 +4,13 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
-import { IconBrain, IconExternalLink } from '@tabler/icons-react';
+import { IconBrain, IconExternalLink, IconNote } from '@tabler/icons-react';
 
 import { LinkPreviewThumb, SourceIcon } from '@/components/app/link-preview';
 import { useAuth } from '@/contexts/auth-provider';
-import type { PublicIdeaBoard } from '@/lib/publicBoards';
+import { useAppColors } from '@/hooks/use-app-colors';
+import type { ForkPublicBoardResult, PublicBoardNote, PublicIdeaBoard } from '@/lib/publicBoards';
+import { resolveNotePalette } from '@/lib/note-palette';
 import { forkPublicIdeaBoard } from '@/lib/supabase/publicBoards';
 
 const sourceLabels: Record<string, string> = {
@@ -23,12 +25,61 @@ interface PublicBoardViewProps {
   board: PublicIdeaBoard;
 }
 
+function getNotePreview(note: PublicBoardNote) {
+  const text = note.description || note.content;
+  if (!text.trim()) return 'Empty note';
+  return text.length > 220 ? `${text.slice(0, 220)}…` : text;
+}
+
+function formatCloneMessage(result: ForkPublicBoardResult, board: PublicIdeaBoard) {
+  if (result.alreadyForked) {
+    return 'Already in your library — opening your copy.';
+  }
+
+  const isNotes = board.folder.kind === 'notes';
+  const count = isNotes
+    ? result.noteCount ?? board.notes.length
+    : result.bookmarkCount ?? board.bookmarks.length;
+  const label = isNotes ? 'note' : 'link';
+
+  return `Cloned ${count} ${label}${count === 1 ? '' : 's'} into your brain.`;
+}
+
+function PublicNoteCard({ note }: { note: PublicBoardNote }) {
+  const { colors } = useAppColors();
+  const palette = resolveNotePalette(note.color, colors);
+
+  return (
+    <article
+      className="overflow-hidden rounded-[24px] border border-white/10"
+      style={{ backgroundColor: palette.bg }}
+    >
+      <div className="flex gap-4 p-5">
+        <div
+          className="flex h-20 w-20 shrink-0 items-center justify-center rounded-2xl"
+          style={{ backgroundColor: `${palette.accent}22` }}
+        >
+          <IconNote size={28} stroke={1.8} style={{ color: palette.accent }} />
+        </div>
+        <div className="min-w-0 flex-1">
+          <p className="text-xs uppercase tracking-wide text-white/45">Note</p>
+          <h2 className="mt-1 text-lg font-semibold leading-snug text-white">{note.name}</h2>
+          <p className="mt-2 text-sm leading-relaxed text-white/70">{getNotePreview(note)}</p>
+        </div>
+      </div>
+    </article>
+  );
+}
+
 export function PublicBoardView({ board }: PublicBoardViewProps) {
   const router = useRouter();
   const { user, isLoading } = useAuth();
   const [forkBusy, setForkBusy] = useState(false);
   const [forkMessage, setForkMessage] = useState('');
 
+  const isNotesFolder = board.folder.kind === 'notes';
+  const itemCount = isNotesFolder ? board.notes.length : board.bookmarks.length;
+  const itemLabel = isNotesFolder ? 'note' : 'curated link';
   const ownerLabel = board.owner.name ?? `@${board.owner.username}`;
   const loginHref = `/app/login?fork=${encodeURIComponent(board.folder.id)}&returnTo=${encodeURIComponent(
     `/p/${board.owner.username}/${board.folder.id}`,
@@ -46,11 +97,7 @@ export function PublicBoardView({ board }: PublicBoardViewProps) {
     setForkMessage('');
     try {
       const result = await forkPublicIdeaBoard(board.folder.id);
-      setForkMessage(
-        result.alreadyForked
-          ? 'Already in your library — opening your copy.'
-          : `Cloned ${result.bookmarkCount ?? board.bookmarks.length} links into your brain.`,
-      );
+      setForkMessage(formatCloneMessage(result, board));
       router.push(`/app/folders/${result.folderId}`);
     } catch (error) {
       setForkMessage(error instanceof Error ? error.message : 'Could not clone this board.');
@@ -92,16 +139,31 @@ export function PublicBoardView({ board }: PublicBoardViewProps) {
               className="flex h-16 w-16 shrink-0 items-center justify-center rounded-2xl text-3xl"
               style={{ backgroundColor: board.folder.color }}
             >
-              {board.folder.emoji ?? '📁'}
+              {board.folder.emoji ?? (isNotesFolder ? '📝' : '📁')}
             </div>
             <div className="min-w-0 flex-1">
-              <p className="text-sm text-white/55">Public idea board by {ownerLabel}</p>
+              <div className="flex items-center gap-2 text-sm text-white/55">
+                {board.owner.photoUrl ? (
+                  <Image
+                    src={board.owner.photoUrl}
+                    alt=""
+                    width={20}
+                    height={20}
+                    className="rounded-full"
+                    unoptimized
+                  />
+                ) : null}
+                <span>
+                  Public {isNotesFolder ? 'notes' : 'idea'} board by {ownerLabel}
+                </span>
+              </div>
               <h1 className="mt-1 text-3xl font-bold tracking-tight">{board.folder.name}</h1>
               {board.folder.description ? (
                 <p className="mt-2 text-sm leading-relaxed text-white/65">{board.folder.description}</p>
               ) : null}
               <p className="mt-3 text-xs text-white/40">
-                {board.bookmarks.length} curated link{board.bookmarks.length === 1 ? '' : 's'}
+                {itemCount} {itemLabel}
+                {itemCount === 1 ? '' : 's'}
                 {board.folder.forkCount > 0
                   ? ` · cloned ${board.folder.forkCount} time${board.folder.forkCount === 1 ? '' : 's'}`
                   : ''}
@@ -111,7 +173,8 @@ export function PublicBoardView({ board }: PublicBoardViewProps) {
 
           {!user && !isLoading ? (
             <p className="mt-5 rounded-2xl bg-white/5 px-4 py-3 text-sm text-white/70">
-              Create a free account to copy this entire directory into your personal workspace.
+              Create a free account to copy this entire {isNotesFolder ? 'notes folder' : 'directory'} into your
+              personal workspace.
             </p>
           ) : null}
 
@@ -119,10 +182,12 @@ export function PublicBoardView({ board }: PublicBoardViewProps) {
         </section>
 
         <section className="mt-8 space-y-4">
-          {board.bookmarks.length === 0 ? (
+          {itemCount === 0 ? (
             <div className="rounded-3xl border border-dashed border-white/15 px-6 py-12 text-center text-white/50">
-              No public links in this board yet.
+              {isNotesFolder ? 'No public notes in this folder yet.' : 'No public links in this board yet.'}
             </div>
+          ) : isNotesFolder ? (
+            board.notes.map((note) => <PublicNoteCard key={note.id} note={note} />)
           ) : (
             board.bookmarks.map((bookmark) => (
               <article

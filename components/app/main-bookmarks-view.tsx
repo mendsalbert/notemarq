@@ -1,13 +1,14 @@
 'use client';
 
 import { useEffect, useMemo, useState } from 'react';
-import { IconBookmark, IconFlame, IconNote, IconSparkles } from '@tabler/icons-react';
+import { IconBookmark, IconFlame, IconNote, IconPinFilled, IconSparkles } from '@tabler/icons-react';
 
 import { KeepBookmarkCard } from '@/components/app/keep-bookmark-card';
 import { NoteCard } from '@/components/app/note-card';
 import { useAppSearch } from '@/contexts/app-search-context';
 import { useAppColors } from '@/hooks/use-app-colors';
 import { getSocialStats } from '@/lib/home-dashboard';
+import { sortWithPinsFirst } from '@/lib/pin-sort';
 import { useAppStore } from '@/store/app-store';
 import type { Bookmark, BookmarkSource, Note } from '@/lib/types';
 import { cn } from '@/lib/utils';
@@ -243,7 +244,9 @@ function filterBookmarks(bookmarks: Bookmark[], query: string) {
 
 function filterNotes(notes: Note[], query: string) {
   const q = query.trim().toLowerCase();
-  const sorted = [...notes].sort(
+  const sorted = sortWithPinsFirst(
+    notes,
+    (note) => note.isPinned,
     (a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime(),
   );
   if (!q) return sorted;
@@ -304,7 +307,9 @@ export function MainBookmarksView({ filter = 'all' }: MainBookmarksViewProps) {
     else if (homeFilter !== 'all' && homeFilter !== 'notes') {
       list = list.filter((b) => b.source === homeFilter);
     }
-    return [...list].sort(
+    return sortWithPinsFirst(
+      list,
+      (item) => item.isPinned,
       (a, b) => new Date(b.dateAdded).getTime() - new Date(a.dateAdded).getTime(),
     );
   }, [bookmarks, query, homeFilter]);
@@ -312,6 +317,21 @@ export function MainBookmarksView({ filter = 'all' }: MainBookmarksViewProps) {
   const visibleNotes = useMemo(
     () => (isNotesFilter ? filterNotes(notes, query) : []),
     [isNotesFilter, notes, query],
+  );
+
+  const pinnedBookmarks = useMemo(
+    () => visibleBookmarks.filter((bookmark) => bookmark.isPinned),
+    [visibleBookmarks],
+  );
+
+  const pinnedNotes = useMemo(
+    () => visibleNotes.filter((note) => note.isPinned),
+    [visibleNotes],
+  );
+
+  const unpinnedBookmarks = useMemo(
+    () => (homeFilter === 'all' ? visibleBookmarks.filter((bookmark) => !bookmark.isPinned) : visibleBookmarks),
+    [homeFilter, visibleBookmarks],
   );
 
   const visibleCount = isNotesFilter ? visibleNotes.length : visibleBookmarks.length;
@@ -401,27 +421,76 @@ export function MainBookmarksView({ filter = 'all' }: MainBookmarksViewProps) {
           </p>
         </div>
       ) : isNotesFilter ? (
-        <div className="grid grid-cols-2 gap-4 md:grid-cols-3 xl:grid-cols-4">
-          {visibleNotes.map((note, index) => (
-            <NoteCard
-              key={note.id}
-              note={note}
-              previews={notePreviews.get(note.id)}
-              index={index}
-            />
-          ))}
-        </div>
+        <>
+          {pinnedNotes.length > 0 && !query.trim() ? (
+            <section className="mb-8">
+              <div className="mb-3 flex items-center gap-2">
+                <IconPinFilled size={16} stroke={2} style={{ color: colors.cyan }} />
+                <h2 className="font-poppins text-[15px] font-bold" style={{ color: colors.text }}>
+                  Pinned
+                </h2>
+              </div>
+              <div className="grid grid-cols-2 gap-4 md:grid-cols-3 xl:grid-cols-4">
+                {pinnedNotes.map((note, index) => (
+                  <NoteCard
+                    key={note.id}
+                    note={note}
+                    previews={notePreviews.get(note.id)}
+                    index={index}
+                  />
+                ))}
+              </div>
+            </section>
+          ) : null}
+          <div className="grid grid-cols-2 gap-4 md:grid-cols-3 xl:grid-cols-4">
+            {(homeFilter === 'notes' && !query.trim()
+              ? visibleNotes.filter((note) => !note.isPinned)
+              : visibleNotes
+            ).map((note, index) => (
+              <NoteCard
+                key={note.id}
+                note={note}
+                previews={notePreviews.get(note.id)}
+                index={index}
+              />
+            ))}
+          </div>
+        </>
       ) : (
         <>
+          {pinnedBookmarks.length > 0 && homeFilter === 'all' && !query.trim() ? (
+            <section className="mb-8">
+              <div className="mb-3 flex items-center gap-2">
+                <IconPinFilled size={16} stroke={2} style={{ color: colors.cyan }} />
+                <h2 className="font-poppins text-[15px] font-bold" style={{ color: colors.text }}>
+                  Pinned
+                </h2>
+              </div>
+              {viewMode === 'list' ? (
+                <div className="mx-auto flex max-w-3xl flex-col gap-2.5">
+                  {pinnedBookmarks.map((b, i) => (
+                    <KeepBookmarkCard key={b.id} bookmark={b} variant="list" index={i} />
+                  ))}
+                </div>
+              ) : (
+                <div className="columns-1 gap-4 sm:columns-2 lg:columns-3 xl:columns-4">
+                  {pinnedBookmarks.map((b, i) => (
+                    <KeepBookmarkCard key={b.id} bookmark={b} variant="grid" index={i} />
+                  ))}
+                </div>
+              )}
+            </section>
+          ) : null}
+
           {viewMode === 'list' ? (
             <div className="mx-auto flex max-w-3xl flex-col gap-2.5">
-              {visibleBookmarks.map((b, i) => (
+              {unpinnedBookmarks.map((b, i) => (
                 <KeepBookmarkCard key={b.id} bookmark={b} variant="list" index={i} />
               ))}
             </div>
           ) : (
             <div className="columns-1 gap-4 sm:columns-2 lg:columns-3 xl:columns-4">
-              {visibleBookmarks.map((b, i) => (
+              {unpinnedBookmarks.map((b, i) => (
                 <KeepBookmarkCard key={b.id} bookmark={b} variant="grid" index={i} />
               ))}
             </div>

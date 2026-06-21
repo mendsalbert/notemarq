@@ -5,6 +5,7 @@ import { IconFolder, IconHash, IconSearch } from '@tabler/icons-react';
 
 import { FolderCard } from '@/components/app/folder-card';
 import { useAppColors } from '@/hooks/use-app-colors';
+import { sortWithPinsFirst } from '@/lib/pin-sort';
 import { useAppStore } from '@/store/app-store';
 
 type OrganizeTab = 'folders' | 'tags';
@@ -20,8 +21,13 @@ export function FoldersView() {
 
   const folders = useMemo(() => {
     const q = searchQuery.trim().toLowerCase();
-    if (!q) return allFolders;
-    return allFolders.filter(
+    const sorted = sortWithPinsFirst(
+      allFolders,
+      (folder) => folder.isPinned,
+      (a, b) => a.name.localeCompare(b.name),
+    );
+    if (!q) return sorted;
+    return sorted.filter(
       (folder) =>
         folder.name.toLowerCase().includes(q) ||
         folder.description.toLowerCase().includes(q),

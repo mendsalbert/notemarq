@@ -23,6 +23,7 @@ const SIDEBAR_TEXT_CLASS = 'font-poppins text-[14px] font-medium';
 
 interface AppSidebarProps {
   onAddBookmark: () => void;
+  onAddNote?: () => void;
   onNavigate?: () => void;
   className?: string;
 }
@@ -69,7 +70,7 @@ function NavItem({
   );
 }
 
-export function AppSidebar({ onAddBookmark, onNavigate, className }: AppSidebarProps) {
+export function AppSidebar({ onAddBookmark, onAddNote, onNavigate, className }: AppSidebarProps) {
   const pathname = usePathname();
   const { colors } = useAppColors();
   const bookmarks = useAppStore((s) => s.bookmarks);
@@ -251,6 +252,21 @@ export function AppSidebar({ onAddBookmark, onNavigate, className }: AppSidebarP
           <IconPlus size={SIDEBAR_ICON_SIZE} stroke={SIDEBAR_ICON_STROKE} />
           Save link
         </button>
+        {onAddNote ? (
+          <button
+            type="button"
+            onClick={onAddNote}
+            className="mt-2 flex w-full items-center justify-center gap-2 rounded-[18px] py-3 font-poppins text-[14px] font-semibold transition-all duration-200 hover:-translate-y-0.5"
+            style={{
+              backgroundColor: colors.lavenderDeep,
+              color: colors.text,
+              boxShadow: `0 4px 14px ${colors.cardShadow}`,
+            }}
+          >
+            <IconNote size={SIDEBAR_ICON_SIZE} stroke={SIDEBAR_ICON_STROKE} />
+            New note
+          </button>
+        ) : null}
       </div>
       </div>
     </aside>

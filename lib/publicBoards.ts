@@ -20,7 +20,7 @@ export function getPublicWebBaseUrl() {
   if (typeof window !== 'undefined') {
     return window.location.origin;
   }
-  return process.env.NEXT_PUBLIC_SITE_URL ?? 'https://notemarq.com';
+  return process.env.NEXT_PUBLIC_SITE_URL ?? 'https://notemarq.vercel.app';
 }
 
 export interface PublicBoardOwner {
@@ -53,15 +53,28 @@ export interface PublicBoardBookmark {
   dateAdded: string;
 }
 
+export interface PublicBoardNote {
+  id: string;
+  name: string;
+  description: string;
+  color: string;
+  icon: string;
+  content: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
 export interface PublicIdeaBoard {
   folder: PublicBoardFolder;
   owner: PublicBoardOwner;
   bookmarks: PublicBoardBookmark[];
+  notes: PublicBoardNote[];
 }
 
 export interface ForkPublicBoardResult {
   folderId: string;
   bookmarkCount?: number;
+  noteCount?: number;
   alreadyForked: boolean;
   sourceOwner?: string;
 }

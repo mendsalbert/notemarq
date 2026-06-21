@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
-import { IconClock, IconDots, IconStarFilled, IconTrash } from '@tabler/icons-react';
+import { IconClock, IconDots, IconPinFilled, IconStar, IconStarFilled, IconTrash } from '@tabler/icons-react';
 
 import { LinkPreviewThumb, SourceIcon } from '@/components/app/link-preview';
 import type { Bookmark } from '@/lib/types';
@@ -39,6 +39,8 @@ interface KeepBookmarkCardProps {
 export function KeepBookmarkCard({ bookmark, variant = 'grid', index = 0 }: KeepBookmarkCardProps) {
   const { colors } = useAppColors();
   const deleteBookmark = useAppStore((s) => s.deleteBookmark);
+  const toggleFavorite = useAppStore((s) => s.toggleFavorite);
+  const togglePinBookmark = useAppStore((s) => s.togglePinBookmark);
   const [menuOpen, setMenuOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
 
@@ -98,6 +100,34 @@ export function KeepBookmarkCard({ bookmark, variant = 'grid', index = 0 }: Keep
           <button
             type="button"
             className="flex w-full items-center gap-2 px-3 py-2.5 font-poppins text-[13px] font-medium transition hover:opacity-80"
+            style={{ color: colors.text }}
+            onClick={() => {
+              setMenuOpen(false);
+              void togglePinBookmark(bookmark.id);
+            }}
+          >
+            <IconPinFilled size={15} stroke={2} />
+            {bookmark.isPinned ? 'Unpin' : 'Pin'}
+          </button>
+          <button
+            type="button"
+            className="flex w-full items-center gap-2 px-3 py-2.5 font-poppins text-[13px] font-medium transition hover:opacity-80"
+            style={{ color: colors.text }}
+            onClick={() => {
+              setMenuOpen(false);
+              void toggleFavorite(bookmark.id);
+            }}
+          >
+            {bookmark.isFavorite ? (
+              <IconStarFilled size={15} stroke={2} style={{ color: colors.cyan }} />
+            ) : (
+              <IconStar size={15} stroke={2} />
+            )}
+            {bookmark.isFavorite ? 'Unstar' : 'Star'}
+          </button>
+          <button
+            type="button"
+            className="flex w-full items-center gap-2 px-3 py-2.5 font-poppins text-[13px] font-medium transition hover:opacity-80"
             style={{ color: colors.danger }}
             onClick={() => void handleDelete()}
           >
@@ -129,6 +159,9 @@ export function KeepBookmarkCard({ bookmark, variant = 'grid', index = 0 }: Keep
           <div className="min-w-0 flex-1 pr-8">
             <div className="flex items-start justify-between gap-2">
               <h3 className="line-clamp-1 text-sm font-bold leading-snug">{bookmark.title}</h3>
+              {bookmark.isPinned ? (
+                <IconPinFilled size={14} className="shrink-0" style={{ color: colors.cyan }} />
+              ) : null}
               {bookmark.isFavorite ? (
                 <IconStarFilled size={14} className="shrink-0" style={{ color: colors.cyan }} />
               ) : null}
@@ -178,6 +211,9 @@ export function KeepBookmarkCard({ bookmark, variant = 'grid', index = 0 }: Keep
             <span className="truncate">{sourceLabels[bookmark.source] ?? 'Link'}</span>
           </span>
           <div className="flex shrink-0 items-center gap-1.5">
+            {bookmark.isPinned ? (
+              <IconPinFilled size={14} style={{ color: colors.cyan }} />
+            ) : null}
             {bookmark.isFavorite ? (
               <IconStarFilled size={14} style={{ color: colors.cyan }} />
             ) : null}

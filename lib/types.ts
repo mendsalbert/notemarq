@@ -11,6 +11,7 @@ export interface Bookmark {
   tags: string[];
   dateAdded: string;
   isFavorite: boolean;
+  isPinned: boolean;
   category: string;
   previewImage?: string;
   previewText?: string;
@@ -32,6 +33,7 @@ export interface Note {
   icon: string;
   notes?: string;
   folderId?: string;
+  isPinned: boolean;
 }
 
 export interface Folder {
@@ -42,6 +44,7 @@ export interface Folder {
   emoji?: string;
   kind: LibraryKind;
   itemCount: number;
+  isPinned: boolean;
   isPublic?: boolean;
   publishedAt?: string;
   forkCount?: number;
@@ -60,6 +63,7 @@ export interface DbBookmark {
   tags: string[] | null;
   date_added: string;
   is_favorite: boolean;
+  is_pinned: boolean;
   category: string;
   preview_image: string | null;
   preview_text: string | null;
@@ -80,6 +84,7 @@ export interface DbNote {
   icon: string;
   content: string;
   folder_id: string | null;
+  is_pinned: boolean;
   created_at: string;
   updated_at: string;
 }
@@ -92,6 +97,7 @@ export interface DbFolder {
   color: string;
   emoji: string | null;
   kind: LibraryKind;
+  is_pinned: boolean;
   is_public?: boolean;
   published_at?: string | null;
   fork_count?: number;

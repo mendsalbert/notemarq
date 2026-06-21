@@ -5,11 +5,11 @@ import {
   IconArrowLeft,
   IconChevronRight,
   IconNote,
-  IconPlus,
 } from '@tabler/icons-react';
 
 import { FolderFace } from '@/components/app/folder-face';
 import { KeepBookmarkCard } from '@/components/app/keep-bookmark-card';
+import { PinToggleButton } from '@/components/app/pin-toggle-button';
 import { useAppColors } from '@/hooks/use-app-colors';
 import { useAppStore } from '@/store/app-store';
 import type { Bookmark, Note } from '@/lib/types';
@@ -27,6 +27,7 @@ export function FolderDetailView({ id }: { id: string }) {
   const folders = useAppStore((s) => s.folders);
   const bookmarks = useAppStore((s) => s.bookmarks);
   const notes = useAppStore((s) => s.notes);
+  const togglePinFolder = useAppStore((s) => s.togglePinFolder);
   const folder = folders.find((f) => f.id === id);
 
   const folderBookmarks = bookmarks
@@ -78,14 +79,10 @@ export function FolderDetailView({ id }: { id: string }) {
           </h1>
         </div>
 
-        <Link
-          href={isBookmarks ? '/app' : '/app/notes'}
-          className="flex h-9 w-9 items-center justify-center rounded-full transition hover:scale-105"
-          style={{ backgroundColor: colors.peach }}
-          aria-label={isBookmarks ? 'Go to bookmarks' : 'New note'}
-        >
-          <IconPlus size={18} stroke={2.4} style={{ color: colors.text }} />
-        </Link>
+        <PinToggleButton
+          pinned={folder.isPinned}
+          onToggle={() => void togglePinFolder(folder.id)}
+        />
       </header>
 
       <p

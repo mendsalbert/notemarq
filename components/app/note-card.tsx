@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
-import { IconDots, IconPencil, IconTrash } from '@tabler/icons-react';
+import { IconDots, IconPinFilled, IconPencil, IconTrash } from '@tabler/icons-react';
 
 import { NoteFace } from '@/components/app/note-face';
 import { LinkPreviewThumb } from '@/components/app/link-preview';
@@ -25,6 +25,7 @@ export function NoteCard({ note, previews = [], index = 0 }: NoteCardProps) {
   const { colors } = useAppColors();
   const updateNote = useAppStore((s) => s.updateNote);
   const deleteNote = useAppStore((s) => s.deleteNote);
+  const togglePinNote = useAppStore((s) => s.togglePinNote);
   const [menuOpen, setMenuOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
 
@@ -98,6 +99,18 @@ export function NoteCard({ note, previews = [], index = 0 }: NoteCardProps) {
               type="button"
               className="flex w-full items-center gap-2 px-3 py-2.5 font-poppins text-[13px] font-medium transition hover:opacity-80"
               style={{ color: colors.text }}
+              onClick={() => {
+                setMenuOpen(false);
+                void togglePinNote(note.id);
+              }}
+            >
+              <IconPinFilled size={15} stroke={2} />
+              {note.isPinned ? 'Unpin' : 'Pin'}
+            </button>
+            <button
+              type="button"
+              className="flex w-full items-center gap-2 px-3 py-2.5 font-poppins text-[13px] font-medium transition hover:opacity-80"
+              style={{ color: colors.text }}
               onClick={() => void handleEdit()}
             >
               <IconPencil size={15} stroke={2} />
@@ -117,15 +130,20 @@ export function NoteCard({ note, previews = [], index = 0 }: NoteCardProps) {
       </div>
 
       <Link href={`/app/notes/${note.id}`} className="flex flex-1 flex-col gap-3 p-4">
-        <NoteFace
-          color={faceAccent}
-          emoji={note.icon}
-          name={note.name}
-          size="sm"
-          compact
-        />
+        <div className="flex items-start justify-between gap-2 pr-6">
+          <NoteFace
+            color={faceAccent}
+            emoji={note.icon}
+            name={note.name}
+            size="sm"
+            compact
+          />
+          {note.isPinned ? (
+            <IconPinFilled size={14} style={{ color: colors.cyan }} />
+          ) : null}
+        </div>
 
-        <div className="min-w-0 flex-1 pr-6">
+        <div className="min-w-0 flex-1">
           <p
             className="line-clamp-2 font-poppins text-[14px] font-bold leading-tight tracking-tight"
             style={{ color: colors.text }}

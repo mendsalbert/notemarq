@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Poppins, Plus_Jakarta_Sans } from "next/font/google";
 import Script from "next/script";
+import { getPublicWebBaseUrl } from "@/lib/publicBoards";
 import "./globals.css";
 
 const poppins = Poppins({
@@ -18,6 +19,7 @@ const jakarta = Plus_Jakarta_Sans({
 });
 
 export const metadata: Metadata = {
+  metadataBase: new URL(getPublicWebBaseUrl()),
   title: "Notemarq - Capture Ideas",
   description: "Transform your thoughts into organized notes and ideas",
 };
