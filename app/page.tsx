@@ -926,6 +926,8 @@ export default function LandingPage() {
               {[
                 ...NAV_LINKS,
                 { href: '/app', label: 'Open App', id: 'app' },
+                { href: '/policy', label: 'Privacy', id: 'policy' },
+                { href: '/terms', label: 'Terms', id: 'terms' },
               ].map((link) => (
                 <a
                   key={link.label}

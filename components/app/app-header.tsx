@@ -51,10 +51,10 @@ function HeaderActions({
 
       {showProfile ? (
         <Link
-          href="/app/settings"
+          href="/app/profile"
           className="flex h-9 w-9 items-center justify-center overflow-hidden rounded-xl transition hover:opacity-80"
           style={{ backgroundColor: colors.lavender }}
-          aria-label="Settings"
+          aria-label="Profile"
         >
           {photo ? (
             <Image src={photo} alt="" width={36} height={36} className="h-9 w-9 object-cover" />

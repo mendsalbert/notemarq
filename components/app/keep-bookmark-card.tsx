@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, type ReactNode } from 'react';
 import Link from 'next/link';
 import { IconClock, IconDots, IconPinFilled, IconStar, IconStarFilled, IconTrash } from '@tabler/icons-react';
 
@@ -34,9 +34,16 @@ interface KeepBookmarkCardProps {
   bookmark: Bookmark;
   variant?: 'grid' | 'list';
   index?: number;
+  /** Public share pages — no menu, opens source URL */
+  readOnly?: boolean;
 }
 
-export function KeepBookmarkCard({ bookmark, variant = 'grid', index = 0 }: KeepBookmarkCardProps) {
+export function KeepBookmarkCard({
+  bookmark,
+  variant = 'grid',
+  index = 0,
+  readOnly = false,
+}: KeepBookmarkCardProps) {
   const { colors } = useAppColors();
   const deleteBookmark = useAppStore((s) => s.deleteBookmark);
   const toggleFavorite = useAppStore((s) => s.toggleFavorite);
@@ -72,7 +79,28 @@ export function KeepBookmarkCard({ bookmark, variant = 'grid', index = 0 }: Keep
     await deleteBookmark(bookmark.id);
   }
 
-  const menu = (
+  const cardBody = (className: string, children: ReactNode) => {
+    if (readOnly) {
+      return (
+        <a
+          href={bookmark.url}
+          target="_blank"
+          rel="noopener noreferrer"
+          className={className}
+        >
+          {children}
+        </a>
+      );
+    }
+
+    return (
+      <Link href={`/app/reader/${bookmark.id}`} className={className}>
+        {children}
+      </Link>
+    );
+  };
+
+  const menu = readOnly ? null : (
     <div ref={menuRef} className="relative z-10">
       <button
         type="button"
@@ -148,15 +176,16 @@ export function KeepBookmarkCard({ bookmark, variant = 'grid', index = 0 }: Keep
           boxShadow: `0 4px 16px ${colors.cardShadow}`,
         }}
       >
-        <div className="absolute right-3 top-3">{menu}</div>
-        <Link href={`/app/reader/${bookmark.id}`} className="flex min-w-0 flex-1 gap-4">
-          <LinkPreviewThumb
-            previewImage={bookmark.previewImage}
-            favicon={bookmark.favicon}
-            source={bookmark.source}
-            className="h-16 w-16 rounded-2xl"
-          />
-          <div className="min-w-0 flex-1 pr-8">
+        {menu ? <div className="absolute right-3 top-3">{menu}</div> : null}
+        {cardBody('flex min-w-0 flex-1 gap-4', (
+          <>
+            <LinkPreviewThumb
+              previewImage={bookmark.previewImage}
+              favicon={bookmark.favicon}
+              source={bookmark.source}
+              className="h-16 w-16 rounded-2xl"
+            />
+            <div className="min-w-0 flex-1 pr-8">
             <div className="flex items-start justify-between gap-2">
               <h3 className="line-clamp-1 text-sm font-bold leading-snug">{bookmark.title}</h3>
               {bookmark.isPinned ? (
@@ -183,8 +212,9 @@ export function KeepBookmarkCard({ bookmark, variant = 'grid', index = 0 }: Keep
                 {domain}
               </span>
             </div>
-          </div>
-        </Link>
+            </div>
+          </>
+        ))}
       </div>
     );
   }
@@ -199,67 +229,69 @@ export function KeepBookmarkCard({ bookmark, variant = 'grid', index = 0 }: Keep
         boxShadow: `0 5px 18px ${colors.cardShadow}`,
       }}
     >
-      <div className="absolute right-3 top-3 z-10">{menu}</div>
+      {menu ? <div className="absolute right-3 top-3 z-10">{menu}</div> : null}
 
-      <Link href={`/app/reader/${bookmark.id}`} className="block p-4">
-        <div className="flex items-start justify-between gap-2 pr-8">
-          <span
-            className="inline-flex max-w-[78%] items-center gap-1.5 rounded-full px-2.5 py-1 text-[10px] font-semibold"
-            style={{ backgroundColor: colors.cream, color: colors.text }}
-          >
-            <SourceIcon source={bookmark.source} size={12} />
-            <span className="truncate">{sourceLabels[bookmark.source] ?? 'Link'}</span>
-          </span>
-          <div className="flex shrink-0 items-center gap-1.5">
-            {bookmark.isPinned ? (
-              <IconPinFilled size={14} style={{ color: colors.cyan }} />
-            ) : null}
-            {bookmark.isFavorite ? (
-              <IconStarFilled size={14} style={{ color: colors.cyan }} />
-            ) : null}
-          </div>
-        </div>
-
-        <h3 className="mt-3 line-clamp-3 text-[15px] font-bold leading-snug" style={{ color: colors.text }}>
-          {bookmark.title}
-        </h3>
-
-        {hasImage ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img
-            src={bookmark.previewImage}
-            alt=""
-            className="mt-3 w-full rounded-2xl object-cover"
-            style={{ maxHeight: 180 }}
-            loading="lazy"
-            referrerPolicy="no-referrer"
-          />
-        ) : snippet ? (
-          <p className="mt-2 line-clamp-4 text-[13px] leading-relaxed" style={{ color: colors.inkSoft }}>
-            {snippet}
-          </p>
-        ) : null}
-
-        <div className="mt-3 flex items-center justify-between gap-2">
-          <div className="flex min-w-0 items-center gap-1.5">
-            {bookmark.tags.slice(0, 2).map((tag) => (
-              <span
-                key={tag}
-                className="truncate rounded-full px-2.5 py-1 text-[10px] font-medium"
-                style={{ backgroundColor: colors.cream, color: colors.inkSoft }}
-              >
-                {tag}
-              </span>
-            ))}
-          </div>
-          {relative ? (
-            <span className="flex shrink-0 items-center gap-1 text-[10px]" style={{ color: colors.subtitle }}>
-              <IconClock size={11} />
-              {relative}
+      {cardBody('block p-4', (
+        <>
+          <div className="flex items-start justify-between gap-2 pr-8">
+            <span
+              className="inline-flex max-w-[78%] items-center gap-1.5 rounded-full px-2.5 py-1 text-[10px] font-semibold"
+              style={{ backgroundColor: colors.cream, color: colors.text }}
+            >
+              <SourceIcon source={bookmark.source} size={12} />
+              <span className="truncate">{sourceLabels[bookmark.source] ?? 'Link'}</span>
             </span>
+            <div className="flex shrink-0 items-center gap-1.5">
+              {bookmark.isPinned ? (
+                <IconPinFilled size={14} style={{ color: colors.cyan }} />
+              ) : null}
+              {bookmark.isFavorite ? (
+                <IconStarFilled size={14} style={{ color: colors.cyan }} />
+              ) : null}
+            </div>
+          </div>
+
+          <h3 className="mt-3 line-clamp-3 text-[15px] font-bold leading-snug" style={{ color: colors.text }}>
+            {bookmark.title}
+          </h3>
+
+          {hasImage ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img
+              src={bookmark.previewImage}
+              alt=""
+              className="mt-3 w-full rounded-2xl object-cover"
+              style={{ maxHeight: 180 }}
+              loading="lazy"
+              referrerPolicy="no-referrer"
+            />
+          ) : snippet ? (
+            <p className="mt-2 line-clamp-4 text-[13px] leading-relaxed" style={{ color: colors.inkSoft }}>
+              {snippet}
+            </p>
           ) : null}
-        </div>
-      </Link>
+
+          <div className="mt-3 flex items-center justify-between gap-2">
+            <div className="flex min-w-0 items-center gap-1.5">
+              {bookmark.tags.slice(0, 2).map((tag) => (
+                <span
+                  key={tag}
+                  className="truncate rounded-full px-2.5 py-1 text-[10px] font-medium"
+                  style={{ backgroundColor: colors.cream, color: colors.inkSoft }}
+                >
+                  {tag}
+                </span>
+              ))}
+            </div>
+            {relative ? (
+              <span className="flex shrink-0 items-center gap-1 text-[10px]" style={{ color: colors.subtitle }}>
+                <IconClock size={11} />
+                {relative}
+              </span>
+            ) : null}
+          </div>
+        </>
+      ))}
     </div>
   );
 }

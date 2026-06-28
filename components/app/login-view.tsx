@@ -71,11 +71,11 @@ export function LoginView() {
         <div className="mb-8 flex flex-col items-center text-center">
           <Image src="/logog.png" alt="Notemarq" width={56} height={56} className="rounded-2xl" />
           <h1 className="mt-4 text-2xl font-semibold">
-            {forkId ? 'Clone to My Brain' : 'Welcome to notemarq'}
+            {forkId ? 'Save to your library' : 'Welcome to notemarq'}
           </h1>
           <p className="mt-2 text-sm leading-relaxed opacity-60">
             {forkId
-              ? 'Create a free account to copy this entire curated directory into your personal workspace.'
+              ? 'Sign in to copy this shared folder into your personal notemarq workspace.'
               : 'Sign in with the same Google account as the mobile app to sync your bookmarks and notes.'}
           </p>
         </div>
@@ -89,8 +89,8 @@ export function LoginView() {
             type="button"
             onClick={() => void handleGoogleSignIn()}
             disabled={submitting}
-            className="flex w-full items-center justify-center gap-3 rounded-full border px-4 py-3.5 text-sm font-semibold transition disabled:opacity-60"
-            style={{ borderColor: colors.border }}
+            className="flex w-full items-center justify-center gap-3 rounded-full px-4 py-3.5 font-poppins text-sm font-bold text-white transition hover:opacity-95 disabled:opacity-60"
+            style={{ backgroundColor: colors.coral }}
           >
             Continue with Google
           </button>

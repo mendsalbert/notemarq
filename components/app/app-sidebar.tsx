@@ -4,14 +4,18 @@ import {
   IconBookmark,
   IconBrain,
   IconFolder,
+  IconLogout,
   IconNote,
   IconPlus,
+  IconSettings,
   IconSparkles,
+  IconUser,
 } from '@tabler/icons-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useMemo } from 'react';
 
+import { useAuth } from '@/contexts/auth-provider';
 import { useAppColors } from '@/hooks/use-app-colors';
 import { APP_SIDEBAR_WIDTH } from '@/lib/app-layout';
 import { useAppStore } from '@/store/app-store';
@@ -72,6 +76,7 @@ function NavItem({
 
 export function AppSidebar({ onAddBookmark, onAddNote, onNavigate, className }: AppSidebarProps) {
   const pathname = usePathname();
+  const { user, signOut } = useAuth();
   const { colors } = useAppColors();
   const bookmarks = useAppStore((s) => s.bookmarks);
   const notes = useAppStore((s) => s.notes);
@@ -225,6 +230,20 @@ export function AppSidebar({ onAddBookmark, onAddNote, onNavigate, className }: 
         <div className="mb-2.5 h-px" style={{ backgroundColor: colors.border }} />
 
         <NavItem
+          href="/app/profile"
+          label="Profile"
+          icon={IconUser}
+          active={pathname.startsWith('/app/profile')}
+          onNavigate={onNavigate}
+        />
+        <NavItem
+          href="/app/settings"
+          label="Settings"
+          icon={IconSettings}
+          active={pathname.startsWith('/app/settings')}
+          onNavigate={onNavigate}
+        />
+        <NavItem
           href="/app/explore"
           label="Explore"
           icon={IconSparkles}
@@ -238,6 +257,24 @@ export function AppSidebar({ onAddBookmark, onAddNote, onNavigate, className }: 
           active={pathname === '/app/brain-map'}
           onNavigate={onNavigate}
         />
+
+        {user ? (
+          <button
+            type="button"
+            onClick={() => {
+              void signOut();
+              onNavigate?.();
+            }}
+            className={cn(
+              'mt-1 flex w-full items-center gap-3 rounded-[18px] px-4 py-3 transition-all duration-200 hover:translate-x-0.5',
+              SIDEBAR_TEXT_CLASS,
+            )}
+            style={{ color: colors.danger }}
+          >
+            <IconLogout size={SIDEBAR_ICON_SIZE} stroke={SIDEBAR_ICON_STROKE} />
+            <span className="truncate">Log out</span>
+          </button>
+        ) : null}
 
         <button
           type="button"
