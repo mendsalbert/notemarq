@@ -24,7 +24,7 @@ export async function generateMetadata({ params }: PublicBoardPageProps): Promis
         board.folder.description ||
         (board.folder.kind === 'notes'
           ? `${board.notes.length} shared notes on notemarq.`
-          : `${board.bookmarks.length} curated links with AI summaries on notemarq.`),
+          : `${board.bookmarks.length} curated links with summaries on notemarq.`),
       alternates: {
         canonical: publicBoardUrl(board.owner.username, board.folder.id),
       },

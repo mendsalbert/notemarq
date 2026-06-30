@@ -25,6 +25,7 @@ import {
 
 import { CountUp } from '@/components/landing/count-up';
 import { Reveal } from '@/components/landing/reveal';
+import { APP_ENTRY_HREF, APP_ENTRY_LABEL } from '@/lib/marketing';
 
 // App-matched tokens (dark home + ExperimentalPalette)
 const BG = '#000000';
@@ -247,11 +248,18 @@ function LandingNavbar() {
 
           <div className="flex items-center gap-2">
             <a
-              href="/app"
+              href="/waitlist"
+              className="hidden items-center rounded-full px-4 py-2.5 text-sm font-medium transition hover:bg-white/10 sm:inline-flex"
+              style={{ color: TEXT }}
+            >
+              Early access
+            </a>
+            <a
+              href={APP_ENTRY_HREF}
               className="hidden items-center gap-2 rounded-full px-5 py-2.5 text-sm font-semibold transition hover:opacity-90 sm:inline-flex"
               style={{ background: CORAL, color: '#FFFFFF' }}
             >
-              Open App <IconArrowRight size={14} stroke={2.5} />
+              {APP_ENTRY_LABEL}
             </a>
 
             <button
@@ -284,12 +292,20 @@ function LandingNavbar() {
               </a>
             ))}
             <a
-              href="/app"
-              className="mt-1 flex items-center justify-center gap-2 rounded-full px-4 py-3 text-sm font-semibold"
+              href="/waitlist"
+              className="mt-1 flex items-center justify-center rounded-full px-4 py-3 text-sm font-medium"
+              style={{ border: `1px solid ${BORDER}`, color: TEXT }}
+              onClick={closeMobile}
+            >
+              Early access
+            </a>
+            <a
+              href={APP_ENTRY_HREF}
+              className="mt-1 flex items-center justify-center rounded-full px-4 py-3 text-sm font-semibold"
               style={{ background: CORAL, color: '#FFFFFF' }}
               onClick={closeMobile}
             >
-              Open App <IconArrowRight size={14} stroke={2.5} />
+              {APP_ENTRY_LABEL}
             </a>
           </div>
         ) : null}
@@ -338,7 +354,7 @@ export default function LandingPage() {
                   <p className="mx-auto mt-4 max-w-lg text-[15px] leading-snug sm:text-base" style={{ color: SOFT }}>
                     Save links from YouTube, TikTok, X, and anywhere you scroll.
                     <br />
-                    Notemarq organizes them with AI so you actually remember what you saved.
+                    Notemarq organizes them automatically so you actually remember what you saved.
                   </p>
 
                   <DownloadLinks className="relative z-10 mt-5" />
@@ -508,7 +524,7 @@ export default function LandingPage() {
                     Three steps to organized bliss
                   </h2>
                   <p className="mx-auto mt-4 max-w-lg text-[15px] leading-relaxed sm:text-base" style={{ color: SOFT }}>
-                    Save in seconds. Let AI handle the filing. Find it again when it matters.
+                    Save in seconds. Let Notemarq handle the filing. Find it again when it matters.
                   </p>
                 </div>
 
@@ -552,7 +568,7 @@ export default function LandingPage() {
                     {
                       step: '02',
                       title: 'Organize',
-                      copy: 'AI tags, summarizes, and files automatically.',
+                      copy: 'Tags, summaries, and folders — handled automatically.',
                       accent: TAG_PURPLE,
                       screenshot: '/stores/organize.png',
                       screenshotAlt: 'Library folders organized automatically in Notemarq',
@@ -700,7 +716,7 @@ export default function LandingPage() {
                         Capture why behind every link
                       </h3>
                       <p className="mt-3 text-base font-medium sm:text-lg" style={{ color: TEXT }}>
-                        Add a note when you save — or let AI suggest one.
+                        Add a note when you save — or let Suggest fill one in.
                       </p>
                       <p className="mx-auto mt-4 max-w-md text-sm leading-relaxed sm:text-[15px] lg:mx-0" style={{ color: SOFT }}>
                         Your future self won&apos;t wonder why you bookmarked that video at 2am.
@@ -718,7 +734,7 @@ export default function LandingPage() {
                       {/* eslint-disable-next-line @next/next/no-img-element */}
                       <img
                         src="/stores/why_notemarq.png"
-                        alt="Notemarq library with AI-organized folders on iPhone"
+                        alt="Notemarq library with auto-organized folders on iPhone"
                         width={1898}
                         height={3671}
                         className="relative block h-auto w-full max-w-[320px] sm:max-w-[380px] lg:max-w-[440px] xl:max-w-[480px]"
@@ -899,16 +915,18 @@ export default function LandingPage() {
                     Your next great idea is already saved somewhere. Notemarq makes sure you remember it.
                   </p>
 
-                  <DownloadLinks className="mt-8" />
-
                   <a
-                    href="/app"
-                    className="mt-5 inline-flex items-center gap-2 text-sm font-semibold transition hover:opacity-80"
-                    style={{ color: TAG_PURPLE }}
+                    href="/waitlist"
+                    className="mt-8 inline-flex items-center gap-2 rounded-full px-6 py-3.5 text-sm font-semibold transition hover:opacity-90"
+                    style={{ background: CORAL, color: '#FFFFFF' }}
                   >
-                    Or open the web app
+                    Join the early access waitlist
                     <IconArrowRight size={15} stroke={2.5} />
                   </a>
+
+                  <p className="mt-4 text-sm" style={{ color: SOFTER }}>
+                    Web app {APP_ENTRY_LABEL.toLowerCase()} — invites rolling out soon.
+                  </p>
                 </div>
               </div>
             </Reveal>
@@ -925,7 +943,8 @@ export default function LandingPage() {
             <nav className="flex flex-wrap items-center justify-center gap-1">
               {[
                 ...NAV_LINKS,
-                { href: '/app', label: 'Open App', id: 'app' },
+                { href: '/waitlist', label: 'Early access', id: 'waitlist-page' },
+                { href: APP_ENTRY_HREF, label: APP_ENTRY_LABEL, id: 'app' },
                 { href: '/policy', label: 'Privacy', id: 'policy' },
                 { href: '/terms', label: 'Terms', id: 'terms' },
               ].map((link) => (

@@ -57,18 +57,18 @@ export default function PrivacyPolicyPage() {
         <ul className="list-disc space-y-2 pl-5">
           <li>Provide, maintain, and sync your saved library across devices</li>
           <li>Authenticate you and manage your account</li>
-          <li>Generate AI summaries, tags, folder suggestions, search results, and related features</li>
+          <li>Generate summaries, tags, folder suggestions, search results, and related features</li>
           <li>Send reminders and notifications you opt into</li>
           <li>Improve reliability, performance, and user experience</li>
           <li>Respond to support requests and enforce our Terms of Service</li>
         </ul>
       </LegalSection>
 
-      <LegalSection title="AI and automated processing">
+      <LegalSection title="Automated processing">
         <p>
-          Notemarq uses third-party AI services to enrich saved links, suggest organization, power semantic search, and
+          Notemarq uses third-party services to enrich saved links, suggest organization, power semantic search, and
           generate insights. When you save content, relevant text such as URLs, titles, descriptions, and your notes may
-          be sent to AI providers for processing. We do not use your content to train public AI models on your behalf.
+          be sent to those providers for processing. We do not use your content to train public models on your behalf.
         </p>
       </LegalSection>
 
@@ -85,10 +85,7 @@ export default function PrivacyPolicyPage() {
             <strong className="text-[#1c1c2e]">Apple</strong> — sign-in on iOS (Sign in with Apple)
           </li>
           <li>
-            <strong className="text-[#1c1c2e]">Anthropic</strong> — AI enrichment and content understanding
-          </li>
-          <li>
-            <strong className="text-[#1c1c2e]">OpenAI</strong> — text embeddings for semantic search
+            <strong className="text-[#1c1c2e]">Google Gemini</strong> — link enrichment, semantic search, and Ask
           </li>
         </ul>
         <p>

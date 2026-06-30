@@ -195,7 +195,7 @@ export function SaveContextMock() {
               className="inline-flex items-center gap-1 rounded-full px-2.5 py-1 font-poppins text-[9px] font-semibold"
               style={{ background: LAVENDER, color: PRIMARY }}
             >
-              <IconSparkles size={9} /> AI suggest
+              <IconSparkles size={9} /> Suggest
             </span>
           </div>
           <div className="mt-2 rounded-2xl p-3" style={{ background: PAGE, border: `1px solid ${BORDER}` }}>
@@ -233,7 +233,7 @@ export function AiOrganizeMock() {
             <IconBrain size={15} style={{ color: PRIMARY }} />
           </span>
           <div className="flex-1">
-            <span className="font-poppins text-[11px] font-bold" style={{ color: INK }}>AI organized 24 saves</span>
+            <span className="font-poppins text-[11px] font-bold" style={{ color: INK }}>Auto-organized 24 saves</span>
             <p className="font-poppins text-[9px]" style={{ color: INK_SOFT }}>into 4 folders automatically</p>
           </div>
           <IconSparkles size={13} style={{ color: PRIMARY }} />

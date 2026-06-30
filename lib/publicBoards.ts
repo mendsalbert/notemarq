@@ -25,7 +25,7 @@ export function getPublicWebBaseUrl() {
     return process.env.NEXT_PUBLIC_SITE_URL ?? 'http://localhost:3000';
   }
 
-  return process.env.NEXT_PUBLIC_SITE_URL ?? 'https://notemarq.vercel.app';
+  return process.env.NEXT_PUBLIC_SITE_URL ?? 'https://www.notemarq.app';
 }
 
 export interface PublicBoardOwner {

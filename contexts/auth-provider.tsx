@@ -14,7 +14,7 @@ interface AuthContextValue {
   user: User | null;
   isLoading: boolean;
   isConfigured: boolean;
-  signInWithGoogle: (redirectPath?: string) => Promise<void>;
+  signInWithGoogleIdToken: (idToken: string) => Promise<void>;
   signOut: () => Promise<void>;
 }
 
@@ -91,11 +91,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     reset();
   }, [user?.id, isLoading, hydrate, reset]);
 
-  const signInWithGoogle = useCallback(async (redirectPath = '/app') => {
-    const redirectTo = `${window.location.origin}${redirectPath.startsWith('/') ? redirectPath : `/${redirectPath}`}`;
-    const { error } = await supabase.auth.signInWithOAuth({
+  const signInWithGoogleIdToken = useCallback(async (idToken: string) => {
+    const { error } = await supabase.auth.signInWithIdToken({
       provider: 'google',
-      options: { redirectTo },
+      token: idToken,
     });
     if (error) throw error;
   }, []);
@@ -118,10 +117,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       user,
       isLoading,
       isConfigured: isSupabaseConfigured,
-      signInWithGoogle,
+      signInWithGoogleIdToken,
       signOut,
     }),
-    [session, user, isLoading, signInWithGoogle, signOut],
+    [session, user, isLoading, signInWithGoogleIdToken, signOut],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

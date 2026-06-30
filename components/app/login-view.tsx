@@ -5,12 +5,13 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import Image from 'next/image';
 
+import { GoogleSignInButton } from '@/components/google-sign-in-button';
 import { useAuth } from '@/contexts/auth-provider';
 import { useAppColors } from '@/hooks/use-app-colors';
 import { forkPublicIdeaBoard } from '@/lib/supabase/publicBoards';
 
 export function LoginView() {
-  const { user, isLoading, isConfigured, signInWithGoogle } = useAuth();
+  const { user, isLoading, isConfigured, signInWithGoogleIdToken } = useAuth();
   const { colors } = useAppColors();
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -37,14 +38,11 @@ export function LoginView() {
     })();
   }, [user, isLoading, forkId, returnTo, router]);
 
-  async function handleGoogleSignIn() {
+  async function handleGoogleCredential(idToken: string) {
     setSubmitting(true);
     setError('');
     try {
-      const redirectPath = forkId
-        ? `/app/login?fork=${encodeURIComponent(forkId)}&returnTo=${encodeURIComponent(returnTo)}`
-        : '/app';
-      await signInWithGoogle(redirectPath);
+      await signInWithGoogleIdToken(idToken);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Sign-in failed');
       setSubmitting(false);
@@ -85,15 +83,25 @@ export function LoginView() {
             Add NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY to website/.env.local
           </p>
         ) : (
-          <button
-            type="button"
-            onClick={() => void handleGoogleSignIn()}
+          <GoogleSignInButton
             disabled={submitting}
-            className="flex w-full items-center justify-center gap-3 rounded-full px-4 py-3.5 font-poppins text-sm font-bold text-white transition hover:opacity-95 disabled:opacity-60"
-            style={{ backgroundColor: colors.coral }}
+            onCredential={handleGoogleCredential}
+            onError={(message) => {
+              setError(message);
+              setSubmitting(false);
+            }}
+            className="w-full"
+            style={{ backgroundColor: colors.coral, borderRadius: 9999 }}
           >
-            Continue with Google
-          </button>
+            <button
+              type="button"
+              disabled={submitting}
+              className="flex w-full items-center justify-center gap-3 rounded-full px-4 py-3.5 font-poppins text-sm font-bold text-white transition hover:opacity-95 disabled:opacity-60"
+              style={{ backgroundColor: colors.coral }}
+            >
+              Continue with Google
+            </button>
+          </GoogleSignInButton>
         )}
 
         {error ? <p className="mt-4 text-center text-sm text-red-500">{error}</p> : null}

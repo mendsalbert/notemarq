@@ -180,7 +180,7 @@ export function AddBookmarkDialog({ open, onClose }: AddBookmarkDialogProps) {
       if (data.saveReason) setSaveReason(data.saveReason);
       if (data.personalContext) setPersonalContext(data.personalContext);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'AI suggest failed');
+      setError(err instanceof Error ? err.message : 'Suggest failed');
     } finally {
       setGenerating(false);
     }
@@ -346,7 +346,7 @@ export function AddBookmarkDialog({ open, onClose }: AddBookmarkDialogProps) {
                 style={{ backgroundColor: colors.lavenderDeep, color: colors.text }}
               >
                 <IconSparkles size={13} stroke={2} />
-                {generating ? 'Writing…' : 'AI suggest'}
+                {generating ? 'Writing…' : 'Suggest'}
               </button>
             </div>
             <textarea

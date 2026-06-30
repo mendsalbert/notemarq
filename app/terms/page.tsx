@@ -54,7 +54,7 @@ export default function TermsOfServicePage() {
 
       <LegalSection title="The Service">
         <p>
-          Notemarq helps you save, organize, and recall links and notes from across the web. Features may include AI
+          Notemarq helps you save, organize, and recall links and notes from across the web. Features may include automated
           summaries, tagging, search, reminders, public sharing, and sync across devices.
         </p>
         <p>
@@ -67,7 +67,7 @@ export default function TermsOfServicePage() {
         <p>
           You retain ownership of the content you save in Notemarq (&quot;Your Content&quot;). By using the Service,
           you grant us a limited license to host, store, process, display, and sync Your Content solely to operate and
-          improve the Service, including AI-powered features described in our Privacy Policy.
+          improve the Service, including smart features described in our Privacy Policy.
         </p>
         <p>
           You are responsible for Your Content and must have the rights needed to save and use it. Do not upload or
@@ -96,7 +96,7 @@ export default function TermsOfServicePage() {
 
       <LegalSection title="Third-party services and links">
         <p>
-          Notemarq integrates with third-party platforms and services such as Google, Apple, Supabase, and AI providers.
+          Notemarq integrates with third-party platforms and services such as Google, Apple, Supabase, and content processing providers.
           Saved links may point to third-party websites we do not control. We are not responsible for third-party
           content, policies, or practices.
         </p>

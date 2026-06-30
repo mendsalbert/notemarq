@@ -7,6 +7,8 @@ import {
   IconWorld,
 } from '@tabler/icons-react';
 
+import { APP_ENTRY_HREF, APP_ENTRY_LABEL } from '@/lib/marketing';
+
 export const metadata = {
   title: 'Browser Extension — Notemarq',
   description: 'Save posts from X, YouTube, TikTok, and the web with the Notemarq browser extension.',
@@ -62,14 +64,14 @@ export default function ExtensionPage() {
             <h2 className="font-poppins text-lg font-semibold">View your full library</h2>
             <p className="mt-2 text-sm leading-relaxed text-[#6b7280]">
               The extension is built for quick capture. Open Notemarq on web or mobile to search saves,
-              organize folders, use AI recall, and explore everything you&apos;ve collected.
+              organize folders, use smart recall, and explore everything you&apos;ve collected.
             </p>
             <div className="mt-5 flex flex-col gap-3 sm:flex-row">
               <Link
-                href="/app"
+                href={APP_ENTRY_HREF}
                 className="inline-flex items-center justify-center rounded-full bg-[#1c1c2e] px-5 py-3 text-sm font-semibold text-white transition hover:opacity-90"
               >
-                Open web app
+                {APP_ENTRY_LABEL}
               </Link>
               <a
                 href={APP_STORE_URL}

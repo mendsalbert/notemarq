@@ -22,6 +22,15 @@ export const metadata: Metadata = {
   metadataBase: new URL(getPublicWebBaseUrl()),
   title: "Notemarq - Capture Ideas",
   description: "Transform your thoughts into organized notes and ideas",
+  icons: {
+    icon: [
+      { url: "/favicon.ico", sizes: "any" },
+      { url: "/favicon-32x32.png", type: "image/png", sizes: "32x32" },
+      { url: "/icon-192.png", type: "image/png", sizes: "192x192" },
+    ],
+    apple: [{ url: "/apple-touch-icon.png", sizes: "180x180", type: "image/png" }],
+    shortcut: "/favicon.ico",
+  },
 };
 
 const beforeInteractiveScript = `
