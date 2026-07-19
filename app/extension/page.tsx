@@ -7,6 +7,7 @@ import {
   IconWorld,
 } from '@tabler/icons-react';
 
+import { ScreenshotSlot } from '@/components/extension/screenshot-slot';
 import { APP_ENTRY_HREF, APP_ENTRY_LABEL } from '@/lib/marketing';
 
 export const metadata = {
@@ -16,6 +17,33 @@ export const metadata = {
 
 const CHROME_EXTENSION_URL = 'https://chrome.google.com/webstore';
 const APP_STORE_URL = 'https://apps.apple.com/app/notemarq';
+
+const HOW_IT_WORKS = [
+  {
+    step: '01',
+    title: 'Install & sign in',
+    description: 'Add the extension from the Chrome Web Store, then sign in with Google in the popup.',
+    imageFile: 'step-1-install.png',
+  },
+  {
+    step: '02',
+    title: 'Open a post on X',
+    description: 'Browse your feed as usual. When you find something worth keeping, tap the bookmark icon.',
+    imageFile: 'step-2-bookmark.png',
+  },
+  {
+    step: '03',
+    title: 'Save with context',
+    description: "Notemarq opens a save sheet. Add a note about why you're saving, or skip and sync instantly.",
+    imageFile: 'step-3-save-sheet.png',
+  },
+  {
+    step: '04',
+    title: 'Find it later',
+    description: 'Your saves sync to the web and mobile library — search, folders, and smart recall included.',
+    imageFile: 'step-4-library.png',
+  },
+] as const;
 
 export default function ExtensionPage() {
   return (
@@ -43,7 +71,29 @@ export default function ExtensionPage() {
           to the same library as the mobile app and web dashboard.
         </p>
 
-        <section className="mt-10 space-y-4">
+        <section className="mt-12">
+          <h2 className="font-poppins text-xl font-semibold tracking-tight">How it works</h2>
+          <p className="mt-2 text-sm leading-relaxed text-[#6b7280]">
+            Four quick steps from install to your first save.
+          </p>
+
+          <ol className="mt-8 space-y-10">
+            {HOW_IT_WORKS.map((item) => (
+              <li key={item.step}>
+                <div className="flex items-baseline gap-3">
+                  <span className="font-poppins text-xs font-semibold tracking-[0.14em] text-[#9ca3af]">
+                    {item.step}
+                  </span>
+                  <h3 className="font-poppins text-lg font-semibold">{item.title}</h3>
+                </div>
+                <p className="mt-2 text-sm leading-relaxed text-[#6b7280]">{item.description}</p>
+                <ScreenshotSlot step={item.step} imageFile={item.imageFile} />
+              </li>
+            ))}
+          </ol>
+        </section>
+
+        <section className="mt-12 space-y-4">
           <div className="rounded-3xl bg-white p-6 shadow-[0_8px_30px_rgba(0,0,0,0.06)]">
             <div className="mb-4 flex h-10 w-10 items-center justify-center rounded-2xl bg-[#E0F7FA] text-[#0891B2]">
               <IconBookmark size={20} stroke={2} />
