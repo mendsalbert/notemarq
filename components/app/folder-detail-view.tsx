@@ -56,42 +56,45 @@ export function FolderDetailView({ id }: { id: string }) {
 
   return (
     <div className="mx-auto w-full max-w-[1400px] px-4 py-5 md:px-6 md:py-6">
-      <header className="mb-4 flex items-center justify-between">
+      <header className="mb-6 grid grid-cols-[36px_1fr_36px] items-start gap-3">
         <Link
           href="/app/folders"
-          className="flex h-9 w-9 items-center justify-center rounded-full transition hover:scale-105"
+          className="mt-1 flex h-9 w-9 items-center justify-center rounded-full transition hover:scale-105"
           style={{ backgroundColor: colors.cream }}
           aria-label="Back to folders"
         >
           <IconArrowLeft size={18} stroke={2} style={{ color: colors.text }} />
         </Link>
 
-        <div className="flex flex-col items-center gap-1">
+        <div className="flex min-w-0 flex-col items-center text-center">
           <FolderFace
             color={folder.color}
             emoji={folder.emoji}
             name={folder.name}
-            size="sm"
-            compact
+            size="lg"
           />
-          <h1 className="font-poppins text-lg font-bold" style={{ color: colors.text }}>
+          <h1
+            className="mt-2.5 max-w-full truncate font-poppins text-lg font-bold leading-tight"
+            style={{ color: colors.text }}
+          >
             {folder.name}
           </h1>
+          <p
+            className="mt-1 max-w-xl font-poppins text-[13px] leading-snug"
+            style={{ color: colors.inkSoft }}
+          >
+            {items.length} {isBookmarks ? 'bookmarks' : 'notes'}
+            {folder.description ? ` · ${folder.description}` : ''}
+          </p>
         </div>
 
-        <PinToggleButton
-          pinned={folder.isPinned}
-          onToggle={() => void togglePinFolder(folder.id)}
-        />
+        <div className="mt-1 flex justify-end">
+          <PinToggleButton
+            pinned={folder.isPinned}
+            onToggle={() => void togglePinFolder(folder.id)}
+          />
+        </div>
       </header>
-
-      <p
-        className="mb-5 text-center font-poppins text-[13px]"
-        style={{ color: colors.inkSoft }}
-      >
-        {items.length} {isBookmarks ? 'bookmarks' : 'notes'}
-        {folder.description ? ` · ${folder.description}` : ''}
-      </p>
 
       {items.length > 0 ? (
         isBookmarks ? (

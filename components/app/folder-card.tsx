@@ -2,7 +2,14 @@
 
 import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
-import { IconDots, IconPinFilled, IconPencil, IconTrash } from '@tabler/icons-react';
+import {
+  IconBookmark,
+  IconDots,
+  IconNote,
+  IconPencil,
+  IconPinFilled,
+  IconTrash,
+} from '@tabler/icons-react';
 
 import { FolderFace } from '@/components/app/folder-face';
 import { LinkPreviewThumb } from '@/components/app/link-preview';
@@ -10,15 +17,13 @@ import { useAppColors } from '@/hooks/use-app-colors';
 import { useAppStore } from '@/store/app-store';
 import type { Bookmark, Folder } from '@/lib/types';
 
-const FOLDER_TINTS = ['lavender', 'peach', 'mint', 'blushDeep', 'butter'] as const;
-
 interface FolderCardProps {
   folder: Folder;
   previews?: Bookmark[];
   index?: number;
 }
 
-export function FolderCard({ folder, previews = [], index = 0 }: FolderCardProps) {
+export function FolderCard({ folder, previews = [] }: FolderCardProps) {
   const { colors } = useAppColors();
   const updateFolder = useAppStore((s) => s.updateFolder);
   const deleteFolder = useAppStore((s) => s.deleteFolder);
@@ -26,9 +31,8 @@ export function FolderCard({ folder, previews = [], index = 0 }: FolderCardProps
   const [menuOpen, setMenuOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
 
-  const tintKey = FOLDER_TINTS[index % FOLDER_TINTS.length];
-  const cardBg = colors[tintKey];
   const countLabel = folder.kind === 'bookmarks' ? 'links' : 'notes';
+  const KindIcon = folder.kind === 'bookmarks' ? IconBookmark : IconNote;
   const previewItems = previews.slice(0, 3);
 
   useEffect(() => {
@@ -62,17 +66,18 @@ export function FolderCard({ folder, previews = [], index = 0 }: FolderCardProps
 
   return (
     <div
-      className="relative flex min-h-[200px] flex-col rounded-[22px] transition-all hover:-translate-y-1"
+      className="relative flex min-h-[210px] flex-col overflow-hidden rounded-[22px] transition-all hover:-translate-y-1"
       style={{
-        backgroundColor: cardBg,
+        backgroundColor: colors.cream,
         boxShadow: `0 2px 10px ${colors.cardShadow}`,
+        border: `1px solid ${colors.border}`,
       }}
     >
       <div ref={menuRef} className="absolute right-3 top-3 z-10">
         <button
           type="button"
-          className="flex h-7 w-7 items-center justify-center rounded-full transition hover:scale-105"
-          style={{ backgroundColor: colors.cream }}
+          className="flex h-8 w-8 items-center justify-center rounded-full transition hover:scale-105"
+          style={{ backgroundColor: colors.lavender }}
           aria-label="Folder options"
           onClick={(event) => {
             event.preventDefault();
@@ -99,7 +104,7 @@ export function FolderCard({ folder, previews = [], index = 0 }: FolderCardProps
               onClick={() => void handleEdit()}
             >
               <IconPencil size={15} stroke={2} />
-              Edit
+              Rename
             </button>
             <button
               type="button"
@@ -131,14 +136,13 @@ export function FolderCard({ folder, previews = [], index = 0 }: FolderCardProps
           color={folder.color}
           emoji={folder.emoji}
           name={folder.name}
-          size="sm"
-          compact
+          size="lg"
         />
 
-        <div className="min-w-0 flex-1 pr-6">
+        <div className="min-w-0 flex-1 pr-8">
           <div className="flex items-start gap-1.5">
             <p
-              className="line-clamp-2 flex-1 font-poppins text-[14px] font-bold leading-tight tracking-tight"
+              className="line-clamp-2 flex-1 font-poppins text-[15px] font-bold leading-tight tracking-tight"
               style={{ color: colors.text }}
             >
               {folder.name}
@@ -147,9 +151,26 @@ export function FolderCard({ folder, previews = [], index = 0 }: FolderCardProps
               <IconPinFilled size={14} stroke={2} style={{ color: colors.primary, flexShrink: 0 }} />
             ) : null}
           </div>
-          <p className="mt-1 font-poppins text-[11px] font-medium" style={{ color: colors.inkSoft }}>
-            {folder.itemCount} {countLabel}
-          </p>
+          {folder.description ? (
+            <p
+              className="mt-1 line-clamp-2 font-poppins text-[12px] leading-snug"
+              style={{ color: colors.inkSoft }}
+            >
+              {folder.description}
+            </p>
+          ) : null}
+          <div className="mt-2.5 flex flex-wrap items-center gap-2">
+            <span
+              className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 font-poppins text-[11px] font-semibold"
+              style={{ backgroundColor: colors.lavender, color: colors.text }}
+            >
+              <KindIcon size={11} stroke={2} />
+              {folder.kind === 'bookmarks' ? 'Links' : 'Notes'}
+            </span>
+            <span className="font-poppins text-[11px] font-medium" style={{ color: colors.inkSoft }}>
+              {folder.itemCount} {countLabel}
+            </span>
+          </div>
         </div>
 
         {folder.kind === 'bookmarks' && previewItems.length > 0 ? (
@@ -159,7 +180,7 @@ export function FolderCard({ folder, previews = [], index = 0 }: FolderCardProps
                 previewImage={previewItems[0].previewImage}
                 favicon={previewItems[0].favicon}
                 source={previewItems[0].source}
-                className="max-h-32 w-full rounded-xl object-cover object-center"
+                className="max-h-28 w-full rounded-xl object-cover object-center"
               />
             </div>
           ) : (
@@ -170,13 +191,13 @@ export function FolderCard({ folder, previews = [], index = 0 }: FolderCardProps
                   previewImage={bookmark.previewImage}
                   favicon={bookmark.favicon}
                   source={bookmark.source}
-                  className={`flex-1 rounded-lg ${previewItems.length === 2 ? 'h-16' : 'h-10'}`}
+                  className={`flex-1 rounded-lg ${previewItems.length === 2 ? 'h-14' : 'h-10'}`}
                 />
               ))}
               {folder.itemCount > previewItems.length ? (
                 <div
-                  className={`flex shrink-0 items-center justify-center rounded-lg font-poppins text-[10px] font-bold ${previewItems.length === 2 ? 'h-16 w-16' : 'h-10 w-10'}`}
-                  style={{ backgroundColor: colors.cream, color: colors.inkSoft }}
+                  className={`flex shrink-0 items-center justify-center rounded-lg font-poppins text-[10px] font-bold ${previewItems.length === 2 ? 'h-14 w-14' : 'h-10 w-10'}`}
+                  style={{ backgroundColor: colors.lavender, color: colors.inkSoft }}
                 >
                   +{folder.itemCount - previewItems.length}
                 </div>

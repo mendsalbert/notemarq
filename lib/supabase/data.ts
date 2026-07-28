@@ -231,7 +231,7 @@ export async function insertUserNote(
       name: payload.name,
       description: payload.description ?? '',
       color: payload.color ?? '#4FC3F7',
-      icon: payload.icon ?? '📝',
+      icon: payload.icon ?? '',
       content: '',
     })
     .select('*')
@@ -251,6 +251,51 @@ function isMissingPinnedColumnError(error: { message?: string; code?: string } |
   if (!error) return false;
   const message = error.message?.toLowerCase() ?? '';
   return error.code === '42703' || error.code === 'PGRST204' || message.includes('is_pinned');
+}
+
+export async function insertFolder(
+  userId: string,
+  folder: Omit<Folder, 'id' | 'createdAt' | 'updatedAt' | 'itemCount'>,
+): Promise<{ folder: Folder; emojiSkipped?: boolean }> {
+  let attempt: Record<string, unknown> = {
+    user_id: userId,
+    name: folder.name,
+    description: folder.description,
+    color: folder.color,
+    emoji: folder.emoji ?? null,
+    kind: folder.kind,
+    is_pinned: folder.isPinned ?? false,
+  };
+  let emojiSkipped = false;
+
+  for (let retry = 0; retry < 3; retry += 1) {
+    const result = await supabase.from('folders').insert(attempt).select('*').single();
+
+    if (!result.error && result.data) {
+      const created = folderFromRow(result.data as DbFolder, 0);
+      return {
+        folder: emojiSkipped ? { ...created, emoji: folder.emoji } : created,
+        emojiSkipped: emojiSkipped || undefined,
+      };
+    }
+
+    if (isMissingEmojiColumnError(result.error) && 'emoji' in attempt) {
+      const { emoji: _ignored, ...withoutEmoji } = attempt;
+      attempt = withoutEmoji;
+      emojiSkipped = true;
+      continue;
+    }
+
+    if (isMissingPinnedColumnError(result.error) && 'is_pinned' in attempt) {
+      const { is_pinned: _ignored, ...withoutPinned } = attempt;
+      attempt = withoutPinned;
+      continue;
+    }
+
+    throw result.error;
+  }
+
+  throw new Error('Could not create folder');
 }
 
 export async function updateFolderRow(

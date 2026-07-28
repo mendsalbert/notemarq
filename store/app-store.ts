@@ -6,6 +6,7 @@ import {
   deleteBookmarkRow,
   deleteFolderRow,
   deleteNoteRow,
+  insertFolder,
   insertUserBookmark,
   insertUserNote,
   syncUserData,
@@ -45,6 +46,10 @@ interface AppStore {
     userId: string,
     payload: { name: string; description?: string; icon?: string; color?: string },
   ) => Promise<Note>;
+  createFolder: (
+    userId: string,
+    payload: Omit<Folder, 'id' | 'createdAt' | 'updatedAt' | 'itemCount'>,
+  ) => Promise<{ id: string; emojiSkipped?: boolean }>;
   updateFolder: (id: string, updates: Partial<Pick<Folder, 'name' | 'description' | 'color' | 'emoji' | 'kind'>>) => Promise<void>;
   deleteFolder: (id: string) => Promise<void>;
   updateNote: (id: string, updates: Partial<Pick<Note, 'name' | 'description' | 'color' | 'icon' | 'notes'>>) => Promise<void>;
@@ -83,7 +88,14 @@ export const useAppStore = create<AppStore>((set, get) => ({
     hydrateUserId = userId;
     hydratePromise = (async () => {
       const previous = get();
-      set({ isLoading: true, userId, syncError: null });
+      // Only show the full-page loading state on the first load. Re-hydrates
+      // must keep the current shelf mounted so scroll position stays put.
+      const initialLoad = previous.userId !== userId || previous.bookmarks.length === 0;
+      set({
+        isLoading: initialLoad,
+        userId,
+        syncError: null,
+      });
 
       try {
         const { bookmarks, notes, folders } = await syncUserData(userId);
@@ -118,6 +130,12 @@ export const useAppStore = create<AppStore>((set, get) => ({
     const note = await insertUserNote(userId, payload);
     set((state) => ({ notes: [note, ...state.notes] }));
     return note;
+  },
+
+  createFolder: async (userId, payload) => {
+    const { folder, emojiSkipped } = await insertFolder(userId, payload);
+    set((state) => ({ folders: [folder, ...state.folders] }));
+    return { id: folder.id, emojiSkipped };
   },
 
   updateFolder: async (id, updates) => {

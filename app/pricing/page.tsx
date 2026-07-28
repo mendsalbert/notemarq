@@ -1,13 +1,24 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
+import { PricingCheckoutButton } from '@/components/pricing-checkout-button';
+import type { PaidPlanId } from '@/lib/stripe/checkout';
 
 export const metadata: Metadata = {
   title: 'Pricing — Notemarq',
   description: 'Choose Notemarq Plus, Pro, or Super Pro. Sync your saves and unlock smarter AI features.',
 };
 
-const TIERS = [
+const TIERS: {
+  plan: PaidPlanId;
+  name: string;
+  price: string;
+  period: string;
+  tagline: string;
+  features: string[];
+  highlight: boolean;
+}[] = [
   {
+    plan: 'plus',
     name: 'Plus',
     price: '$4.99',
     period: '/ month',
@@ -17,10 +28,10 @@ const TIERS = [
       '50 Ask / Suggest / Auto organize per month',
       'Sync across all devices',
     ],
-    href: 'https://notemarq.lemonsqueezy.com/checkout/buy/bb78150f-2bb8-4694-8f37-e485578b11c4',
     highlight: false,
   },
   {
+    plan: 'pro',
     name: 'Pro',
     price: '$9.99',
     period: '/ month',
@@ -30,10 +41,10 @@ const TIERS = [
       '80 AI uses per month',
       'Weekly digest & priority support',
     ],
-    href: 'https://notemarq.lemonsqueezy.com/checkout/buy/23264e22-982a-4b62-b330-8d3a93a7f937',
     highlight: true,
   },
   {
+    plan: 'super_pro',
     name: 'Super Pro',
     price: '$17.99',
     period: '/ month',
@@ -43,10 +54,9 @@ const TIERS = [
       'Unlimited imports',
       'Shared folders & early access',
     ],
-    href: 'https://notemarq.lemonsqueezy.com/checkout/buy/02912e6f-f270-4c57-b667-650ec2ccf634',
     highlight: false,
   },
-] as const;
+];
 
 type PageProps = {
   searchParams?: Promise<Record<string, string | string[] | undefined>>;
@@ -56,6 +66,7 @@ export default async function PricingPage({ searchParams }: PageProps) {
   const params = (await searchParams) ?? {};
   const checkout = typeof params.checkout === 'string' ? params.checkout : '';
   const success = checkout === 'success';
+  const cancelled = checkout === 'cancelled';
 
   return (
     <main
@@ -89,8 +100,8 @@ export default async function PricingPage({ searchParams }: PageProps) {
               You&apos;re all set
             </h1>
             <p style={{ color: 'rgba(255,255,255,0.65)', margin: 0, lineHeight: 1.55, maxWidth: 520 }}>
-              Your plan updates automatically in the Notemarq app. Open the app and pull to refresh on Pricing if it
-              still shows Free for a moment.
+              Your plan updates automatically in Notemarq. Open the app or extension and refresh if it still shows Free
+              for a moment.
             </p>
             <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', marginTop: 20 }}>
               <a
@@ -124,6 +135,22 @@ export default async function PricingPage({ searchParams }: PageProps) {
               </a>
             </div>
           </section>
+        ) : cancelled ? (
+          <section
+            style={{
+              marginTop: 32,
+              padding: '28px 24px',
+              borderRadius: 20,
+              background: '#1A1612',
+              border: '1px solid #3A3020',
+            }}
+          >
+            <p style={{ color: '#FFB020', fontSize: 13, fontWeight: 600, margin: 0 }}>Checkout cancelled</p>
+            <h1 style={{ fontSize: 28, margin: '8px 0 10px', letterSpacing: '-0.03em' }}>No worries</h1>
+            <p style={{ color: 'rgba(255,255,255,0.65)', margin: 0, lineHeight: 1.55, maxWidth: 520 }}>
+              You can upgrade anytime. Pick a plan below when you&apos;re ready.
+            </p>
+          </section>
         ) : (
           <header style={{ marginTop: 36 }}>
             <p style={{ color: '#22D3EE', fontSize: 13, fontWeight: 600, margin: 0 }}>Pricing</p>
@@ -145,7 +172,7 @@ export default async function PricingPage({ searchParams }: PageProps) {
           >
             {TIERS.map((tier) => (
               <article
-                key={tier.name}
+                key={tier.plan}
                 style={{
                   background: tier.highlight ? '#1A1828' : '#141414',
                   border: tier.highlight ? '1px solid #3A3560' : '1px solid #1F1F1F',
@@ -185,28 +212,16 @@ export default async function PricingPage({ searchParams }: PageProps) {
                     <li key={feature}>{feature}</li>
                   ))}
                 </ul>
-                <a
-                  href={tier.href}
-                  style={{
-                    marginTop: 'auto',
-                    textAlign: 'center',
-                    background: tier.highlight ? '#22D3EE' : '#fff',
-                    color: '#000',
-                    padding: '12px 14px',
-                    borderRadius: 999,
-                    fontWeight: 700,
-                    textDecoration: 'none',
-                    fontSize: 14,
-                  }}
-                >
-                  Get {tier.name}
-                </a>
+                <PricingCheckoutButton
+                  plan={tier.plan}
+                  label={`Get ${tier.name}`}
+                  highlight={tier.highlight}
+                />
               </article>
             ))}
           </div>
           <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: 13, marginTop: 24, lineHeight: 1.5 }}>
-            Already subscribed in the app? Manage billing from Pricing inside Notemarq. iOS subscriptions are handled
-            through the App Store.
+            Checkout is powered by Stripe. iOS subscriptions are handled through the App Store.
           </p>
         </section>
       </div>

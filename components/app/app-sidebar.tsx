@@ -1,29 +1,33 @@
 'use client';
 
 import {
+  IconBrandX,
+  IconBrandYoutube,
   IconBookmark,
-  IconBrain,
+  IconChevronDown,
   IconFolder,
-  IconLogout,
   IconNote,
+  IconPinFilled,
   IconPlus,
   IconSettings,
-  IconSparkles,
-  IconUser,
 } from '@tabler/icons-react';
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
-import { useMemo } from 'react';
+import { usePathname, useSearchParams } from 'next/navigation';
+import { Suspense, useMemo, useState } from 'react';
 
-import { useAuth } from '@/contexts/auth-provider';
+import { FolderFace } from '@/components/app/folder-face';
 import { useAppColors } from '@/hooks/use-app-colors';
+import { useUserPlan } from '@/hooks/use-user-plan';
 import { APP_SIDEBAR_WIDTH } from '@/lib/app-layout';
-import { useAppStore } from '@/store/app-store';
+import { planDisplayName } from '@/lib/plan';
+import type { Folder } from '@/lib/types';
 import { cn } from '@/lib/utils';
+import { useAppStore } from '@/store/app-store';
 
 const SIDEBAR_ICON_SIZE = 20;
 const SIDEBAR_ICON_STROKE = 2;
 const SIDEBAR_TEXT_CLASS = 'font-poppins text-[14px] font-medium';
+const SIDEBAR_FOLDER_PAGE = 4;
 
 interface AppSidebarProps {
   onAddBookmark: () => void;
@@ -74,34 +78,86 @@ function NavItem({
   );
 }
 
-export function AppSidebar({ onAddBookmark, onAddNote, onNavigate, className }: AppSidebarProps) {
-  const pathname = usePathname();
-  const { user, signOut } = useAuth();
+function SidebarFolderRow({
+  folder,
+  active,
+  onNavigate,
+}: {
+  folder: Folder;
+  active: boolean;
+  onNavigate?: () => void;
+}) {
   const { colors } = useAppColors();
-  const bookmarks = useAppStore((s) => s.bookmarks);
-  const notes = useAppStore((s) => s.notes);
+  const countLabel = folder.kind === 'bookmarks' ? 'links' : 'notes';
 
-  const isBookmarks = pathname === '/app' || pathname.startsWith('/app/reader');
+  return (
+    <Link
+      href={`/app/folders/${folder.id}`}
+      onClick={onNavigate}
+      className={cn(
+        'group relative flex items-center gap-3 rounded-[18px] px-4 py-2.5 transition-all duration-200',
+        active ? 'font-semibold' : 'hover:translate-x-0.5',
+      )}
+      style={
+        active
+          ? { backgroundColor: colors.lavender, color: colors.text }
+          : { color: colors.inkSoft }
+      }
+    >
+      {active ? (
+        <div
+          className="absolute left-0 top-1/2 h-5 w-1 -translate-y-1/2 rounded-r-full"
+          style={{ backgroundColor: colors.primary }}
+        />
+      ) : null}
+      <FolderFace color={folder.color} emoji={folder.emoji} name={folder.name} size="xs" />
+      <span className="min-w-0 flex-1">
+        <span
+          className="flex items-center gap-1 truncate font-poppins text-[13px] font-semibold leading-tight"
+          style={{ color: colors.text }}
+        >
+          <span className="truncate">{folder.name}</span>
+          {folder.isPinned ? (
+            <IconPinFilled size={11} stroke={2} style={{ color: colors.primary, flexShrink: 0 }} />
+          ) : null}
+        </span>
+        <span
+          className="mt-0.5 block truncate font-poppins text-[11px] font-medium leading-none"
+          style={{ color: colors.subtitle }}
+        >
+          {folder.itemCount} {countLabel}
+        </span>
+      </span>
+    </Link>
+  );
+}
 
-  const recentItems = useMemo(() => {
-    const items: Array<{ type: 'bookmark' | 'note'; date: string; id: string; title: string }> = [
-      ...bookmarks.map((b) => ({
-        type: 'bookmark' as const,
-        date: b.dateAdded,
-        id: b.id,
-        title: b.title,
-      })),
-      ...notes.map((n) => ({
-        type: 'note' as const,
-        date: n.createdAt || '',
-        id: n.id,
-        title: n.name,
-      })),
-    ];
-    return items
-      .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
-      .slice(0, 4);
-  }, [bookmarks, notes]);
+function AppSidebarInner({ onAddBookmark, onAddNote, onNavigate, className }: AppSidebarProps) {
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+  const { colors } = useAppColors();
+  const { plan } = useUserPlan();
+  const folders = useAppStore((s) => s.folders);
+  const [folderVisibleCount, setFolderVisibleCount] = useState(SIDEBAR_FOLDER_PAGE);
+
+  const source = searchParams.get('source');
+  const isSourceTwitter = source === 'twitter' || source === 'x';
+  const isSourceYoutube = source === 'youtube';
+  const isBookmarks =
+    (pathname === '/app' || pathname.startsWith('/app/reader')) &&
+    !isSourceTwitter &&
+    !isSourceYoutube;
+
+  const sortedFolders = useMemo(() => {
+    const pinned = folders.filter((folder) => folder.isPinned);
+    const rest = folders
+      .filter((folder) => !folder.isPinned)
+      .sort((a, b) => a.name.localeCompare(b.name));
+    return [...pinned, ...rest];
+  }, [folders]);
+
+  const visibleFolders = sortedFolders.slice(0, folderVisibleCount);
+  const remainingFolders = Math.max(0, sortedFolders.length - folderVisibleCount);
 
   return (
     <aside
@@ -128,7 +184,7 @@ export function AppSidebar({ onAddBookmark, onAddNote, onNavigate, className }: 
           className="absolute right-3 top-1/2 -translate-y-1/2 rounded-full px-2 py-0.5 font-poppins text-[10px] font-bold uppercase tracking-wide"
           style={{ backgroundColor: colors.lavenderDeep, color: colors.text }}
         >
-          Free
+          {planDisplayName(plan)}
         </span>
       </div>
 
@@ -155,13 +211,6 @@ export function AppSidebar({ onAddBookmark, onAddNote, onNavigate, className }: 
           onNavigate={onNavigate}
         />
         <NavItem
-          href="/app/folders"
-          label="Folders"
-          icon={IconFolder}
-          active={pathname.startsWith('/app/folders')}
-          onNavigate={onNavigate}
-        />
-        <NavItem
           href="/app/notes"
           label="Notes"
           icon={IconNote}
@@ -170,72 +219,111 @@ export function AppSidebar({ onAddBookmark, onAddNote, onNavigate, className }: 
         />
       </nav>
 
-      {recentItems.length > 0 && (
-        <div className="mt-4">
-          <div className="mb-2.5 flex items-center gap-2 px-2">
-            <div className="h-px flex-1" style={{ backgroundColor: colors.border }} />
-            <span
-              className="font-poppins text-[10px] font-semibold uppercase tracking-wider"
+      <div className="mt-4">
+        <div className="mb-2.5 flex items-center gap-2 px-2">
+          <div className="h-px flex-1" style={{ backgroundColor: colors.border }} />
+          <span
+            className="font-poppins text-[10px] font-semibold uppercase tracking-wider"
+            style={{ color: colors.subtitle }}
+          >
+            Import
+          </span>
+          <div className="h-px flex-1" style={{ backgroundColor: colors.border }} />
+        </div>
+        <nav className="flex flex-col gap-1">
+          <Link
+            href="/app?source=twitter"
+            onClick={onNavigate}
+            className={cn(
+              'group relative flex items-center gap-3 rounded-[18px] px-4 py-3 transition-all duration-200',
+              SIDEBAR_TEXT_CLASS,
+              isSourceTwitter ? 'font-semibold' : 'hover:translate-x-0.5',
+            )}
+            style={
+              isSourceTwitter
+                ? { backgroundColor: colors.lavender, color: colors.text }
+                : { color: colors.inkSoft }
+            }
+          >
+            {isSourceTwitter ? (
+              <div
+                className="absolute left-0 top-1/2 h-5 w-1 -translate-y-1/2 rounded-r-full"
+                style={{ backgroundColor: colors.primary }}
+              />
+            ) : null}
+            <IconBrandX size={SIDEBAR_ICON_SIZE} stroke={SIDEBAR_ICON_STROKE} className="shrink-0" />
+            <span className="truncate">Import from X</span>
+          </Link>
+          <Link
+            href="/app?source=youtube"
+            onClick={onNavigate}
+            className={cn(
+              'group relative flex items-center gap-3 rounded-[18px] px-4 py-3 transition-all duration-200',
+              SIDEBAR_TEXT_CLASS,
+              isSourceYoutube ? 'font-semibold' : 'hover:translate-x-0.5',
+            )}
+            style={
+              isSourceYoutube
+                ? { backgroundColor: colors.lavender, color: colors.text }
+                : { color: colors.inkSoft }
+            }
+          >
+            {isSourceYoutube ? (
+              <div
+                className="absolute left-0 top-1/2 h-5 w-1 -translate-y-1/2 rounded-r-full"
+                style={{ backgroundColor: colors.primary }}
+              />
+            ) : null}
+            <IconBrandYoutube size={SIDEBAR_ICON_SIZE} stroke={SIDEBAR_ICON_STROKE} className="shrink-0" />
+            <span className="truncate">Import from YouTube</span>
+          </Link>
+        </nav>
+      </div>
+
+      <div className="mt-4">
+        <div className="mb-2.5 flex items-center gap-2 px-2">
+          <div className="h-px flex-1" style={{ backgroundColor: colors.border }} />
+          <span
+            className="font-poppins text-[10px] font-semibold uppercase tracking-wider"
+            style={{ color: colors.subtitle }}
+          >
+            Folders
+          </span>
+          <div className="h-px flex-1" style={{ backgroundColor: colors.border }} />
+        </div>
+        <nav className="flex flex-col gap-0.5">
+          <NavItem
+            href="/app/folders"
+            label="All folders"
+            icon={IconFolder}
+            active={pathname === '/app/folders'}
+            onNavigate={onNavigate}
+          />
+          {visibleFolders.map((folder) => (
+            <SidebarFolderRow
+              key={folder.id}
+              folder={folder}
+              active={pathname === `/app/folders/${folder.id}`}
+              onNavigate={onNavigate}
+            />
+          ))}
+          {remainingFolders > 0 ? (
+            <button
+              type="button"
+              onClick={() => setFolderVisibleCount((n) => n + SIDEBAR_FOLDER_PAGE)}
+              className="mt-0.5 flex w-full items-center justify-center gap-1 rounded-[18px] px-4 py-2 font-poppins text-[12px] font-semibold transition hover:translate-x-0.5"
               style={{ color: colors.subtitle }}
             >
-              Recent
-            </span>
-            <div className="h-px flex-1" style={{ backgroundColor: colors.border }} />
-          </div>
-          <nav className="flex flex-col gap-1">
-            {recentItems.map((item) => {
-              const href =
-                item.type === 'bookmark' ? `/app/reader/${item.id}` : `/app/notes/${item.id}`;
-              const active = pathname === href;
-              const ItemIcon = item.type === 'note' ? IconNote : IconBookmark;
-
-              return (
-                <Link
-                  key={`${item.type}-${item.id}`}
-                  href={href}
-                  onClick={onNavigate}
-                  className={cn(
-                    'group flex items-center gap-3 rounded-[18px] px-4 py-3 transition-all duration-200',
-                    SIDEBAR_TEXT_CLASS,
-                    active ? 'font-semibold' : 'hover:translate-x-0.5',
-                  )}
-                  style={
-                    active
-                      ? { backgroundColor: colors.butter, color: colors.text }
-                      : { color: colors.inkSoft }
-                  }
-                >
-                  <ItemIcon size={SIDEBAR_ICON_SIZE} stroke={SIDEBAR_ICON_STROKE} className="shrink-0" />
-                  <span className="truncate">{item.title}</span>
-                </Link>
-              );
-            })}
-          </nav>
-          {bookmarks.length + notes.length > 4 && (
-            <Link
-              href="/app/library"
-              className={cn(
-                'mt-2 flex items-center justify-center rounded-[18px] px-4 py-3 transition-all hover:translate-x-0.5',
-                SIDEBAR_TEXT_CLASS,
-              )}
-              style={{ color: colors.inkSoft }}
-            >
-              Load more
-            </Link>
-          )}
-        </div>
-      )}
+              <IconChevronDown size={14} stroke={2} />
+              Load more ({remainingFolders})
+            </button>
+          ) : null}
+        </nav>
+      </div>
 
       <div className="mt-auto space-y-1 pt-3">
         <div className="mb-2.5 h-px" style={{ backgroundColor: colors.border }} />
 
-        <NavItem
-          href="/app/profile"
-          label="Profile"
-          icon={IconUser}
-          active={pathname.startsWith('/app/profile')}
-          onNavigate={onNavigate}
-        />
         <NavItem
           href="/app/settings"
           label="Settings"
@@ -243,38 +331,6 @@ export function AppSidebar({ onAddBookmark, onAddNote, onNavigate, className }: 
           active={pathname.startsWith('/app/settings')}
           onNavigate={onNavigate}
         />
-        <NavItem
-          href="/app/explore"
-          label="Explore"
-          icon={IconSparkles}
-          active={pathname === '/app/explore'}
-          onNavigate={onNavigate}
-        />
-        <NavItem
-          href="/app/brain-map"
-          label="Brain map"
-          icon={IconBrain}
-          active={pathname === '/app/brain-map'}
-          onNavigate={onNavigate}
-        />
-
-        {user ? (
-          <button
-            type="button"
-            onClick={() => {
-              void signOut();
-              onNavigate?.();
-            }}
-            className={cn(
-              'mt-1 flex w-full items-center gap-3 rounded-[18px] px-4 py-3 transition-all duration-200 hover:translate-x-0.5',
-              SIDEBAR_TEXT_CLASS,
-            )}
-            style={{ color: colors.danger }}
-          >
-            <IconLogout size={SIDEBAR_ICON_SIZE} stroke={SIDEBAR_ICON_STROKE} />
-            <span className="truncate">Log out</span>
-          </button>
-        ) : null}
 
         <button
           type="button"
@@ -307,5 +363,13 @@ export function AppSidebar({ onAddBookmark, onAddNote, onNavigate, className }: 
       </div>
       </div>
     </aside>
+  );
+}
+
+export function AppSidebar(props: AppSidebarProps) {
+  return (
+    <Suspense fallback={null}>
+      <AppSidebarInner {...props} />
+    </Suspense>
   );
 }

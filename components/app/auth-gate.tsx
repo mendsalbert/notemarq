@@ -5,7 +5,6 @@ import { useEffect } from 'react';
 
 import { AppShell } from '@/components/app/app-shell';
 import { useAuth } from '@/contexts/auth-provider';
-import { APP_ENTRY_HREF } from '@/lib/marketing';
 
 function hasOAuthCallbackParams() {
   if (typeof window === 'undefined') return false;
@@ -28,7 +27,7 @@ export function AuthGate({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     if (isLoading || user || hasOAuthCallbackParams()) return;
-    router.replace(APP_ENTRY_HREF);
+    router.replace('/app/login');
   }, [user, isLoading, router]);
 
   if (isLoading) {

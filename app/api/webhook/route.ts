@@ -1,8 +1,8 @@
 import { NextResponse } from 'next/server';
 
 /**
- * Lemon Squeezy webhook endpoint (configured at https://notemarq.app/api/webhook).
- * Forwards the raw body + signature to the Supabase edge function that applies plans.
+ * Billing webhook endpoint (https://notemarq.app/api/webhook).
+ * Routes Stripe or Lemon Squeezy payloads to the matching Supabase edge function.
  */
 export async function POST(request: Request) {
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL?.replace(/\/$/, '');
@@ -13,19 +13,30 @@ export async function POST(request: Request) {
   }
 
   const rawBody = await request.text();
-  const signature = request.headers.get('X-Signature') ?? '';
+  const stripeSignature = request.headers.get('Stripe-Signature');
+  const lemonSignature = request.headers.get('X-Signature') ?? '';
   const eventName = request.headers.get('X-Event-Name') ?? '';
 
+  const isStripe = Boolean(stripeSignature);
+  const functionName = isStripe ? 'stripe-webhook' : 'lemon-squeezy-webhook';
+
+  const headers: Record<string, string> = {
+    'Content-Type': 'application/json',
+    apikey: anonKey,
+    Authorization: `Bearer ${anonKey}`,
+  };
+
+  if (isStripe && stripeSignature) {
+    headers['Stripe-Signature'] = stripeSignature;
+  } else {
+    headers['X-Signature'] = lemonSignature;
+    if (eventName) headers['X-Event-Name'] = eventName;
+  }
+
   try {
-    const res = await fetch(`${supabaseUrl}/functions/v1/lemon-squeezy-webhook`, {
+    const res = await fetch(`${supabaseUrl}/functions/v1/${functionName}`, {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        apikey: anonKey,
-        Authorization: `Bearer ${anonKey}`,
-        'X-Signature': signature,
-        'X-Event-Name': eventName,
-      },
+      headers,
       body: rawBody,
     });
 

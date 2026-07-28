@@ -916,16 +916,16 @@ export default function LandingPage() {
                   </p>
 
                   <a
-                    href="/waitlist"
+                    href={APP_ENTRY_HREF}
                     className="mt-8 inline-flex items-center gap-2 rounded-full px-6 py-3.5 text-sm font-semibold transition hover:opacity-90"
                     style={{ background: CORAL, color: '#FFFFFF' }}
                   >
-                    Join the early access waitlist
+                    {APP_ENTRY_LABEL}
                     <IconArrowRight size={15} stroke={2.5} />
                   </a>
 
                   <p className="mt-4 text-sm" style={{ color: SOFTER }}>
-                    Web app {APP_ENTRY_LABEL.toLowerCase()} — invites rolling out soon.
+                    Sign in with Google to open your library on the web.
                   </p>
                 </div>
               </div>

@@ -1,221 +1,28 @@
 'use client';
 
+import { IconNote, IconPinFilled, IconSparkles } from '@tabler/icons-react';
+import Link from 'next/link';
+import { useSearchParams } from 'next/navigation';
 import { useEffect, useMemo, useState } from 'react';
-import { IconBookmark, IconFlame, IconNote, IconPinFilled, IconSparkles } from '@tabler/icons-react';
 
 import { KeepBookmarkCard } from '@/components/app/keep-bookmark-card';
 import { NoteCard } from '@/components/app/note-card';
 import { useAppSearch } from '@/contexts/app-search-context';
 import { useAppColors } from '@/hooks/use-app-colors';
-import { getSocialStats } from '@/lib/home-dashboard';
 import { sortWithPinsFirst } from '@/lib/pin-sort';
-import { useAppStore } from '@/store/app-store';
 import type { Bookmark, BookmarkSource, Note } from '@/lib/types';
 import { cn } from '@/lib/utils';
+import { useAppStore } from '@/store/app-store';
 
-const BOOKMARK_GOAL_KEY = 'notemarq-web-weekly-bookmark-goal';
-const NOTE_GOAL_KEY = 'notemarq-web-weekly-note-goal';
-
-function readGoal(key: string, fallback: number) {
-  if (typeof window === 'undefined') return fallback;
-  const raw = localStorage.getItem(key);
-  const n = raw ? Number(raw) : fallback;
-  return Number.isFinite(n) && n > 0 ? n : fallback;
-}
-
-function startOfWeek(date: Date) {
-  const d = new Date(date.getFullYear(), date.getMonth(), date.getDate());
-  const day = d.getDay();
-  const diff = day === 0 ? -6 : 1 - day;
-  d.setDate(d.getDate() + diff);
-  d.setHours(0, 0, 0, 0);
-  return d;
-}
-
-function ProgressRing({
-  percent,
-  color,
-  trackColor,
-  size = 68,
-  stroke = 5,
-}: {
-  percent: number;
-  color: string;
-  trackColor: string;
-  size?: number;
-  stroke?: number;
-}) {
-  const radius = (size - stroke) / 2;
-  const circumference = 2 * Math.PI * radius;
-  const clamped = Math.max(0, Math.min(1, percent));
-  const offset = circumference * (1 - clamped);
-  return (
-    <svg width={size} height={size} className="block">
-      <circle
-        cx={size / 2}
-        cy={size / 2}
-        r={radius}
-        fill="none"
-        stroke={trackColor}
-        strokeWidth={stroke}
-      />
-      <circle
-        cx={size / 2}
-        cy={size / 2}
-        r={radius}
-        fill="none"
-        stroke={color}
-        strokeWidth={stroke}
-        strokeDasharray={circumference}
-        strokeDashoffset={offset}
-        strokeLinecap="round"
-        transform={`rotate(-90 ${size / 2} ${size / 2})`}
-        style={{ transition: 'stroke-dashoffset 600ms ease' }}
-      />
-    </svg>
-  );
-}
-
-function WeeklyGoalCard({
-  saves,
-  notes,
-  streak,
-  saveGoal,
-  noteGoal,
-}: {
-  saves: number;
-  notes: number;
-  streak: number;
-  saveGoal: number;
-  noteGoal: number;
-}) {
-  const { colors, isDark } = useAppColors();
-
-  const ringTrack = isDark ? 'rgba(255,255,255,0.08)' : 'rgba(28,28,46,0.07)';
-  const blue = '#4FC3F7';
-  const green = '#22C55E';
-  const orange = '#F59E0B';
-
-  const totalGoal = saveGoal + noteGoal;
-  const totalThisWeek = saves + notes;
-
-  return (
-    <div
-      className="mx-auto mt-6 w-full max-w-[440px] rounded-[32px] p-6"
-      style={{
-        backgroundColor: colors.cream,
-        border: `1px solid ${colors.border}`,
-        boxShadow: `0 10px 30px ${colors.cardShadow}`,
-      }}
-    >
-      {/* Header */}
-      <p
-        className="text-[11px] font-semibold uppercase"
-        style={{ color: colors.subtitle, letterSpacing: '0.14em' }}
-      >
-        Total this week
-      </p>
-
-      {/* Main row: big number + flame */}
-      <div className="mt-2 flex items-start justify-between">
-        <div className="flex items-baseline gap-2">
-          <span
-            className="text-[44px] font-bold leading-none tracking-tight"
-            style={{ color: colors.text }}
-          >
-            {totalThisWeek.toLocaleString()}
-          </span>
-          <span className="text-[22px] font-medium" style={{ color: colors.subtitle }}>
-            saves
-          </span>
-        </div>
-        <div className="flex h-12 w-12 items-center justify-center">
-          <IconFlame size={44} stroke={1.6} style={{ color: orange }} />
-        </div>
-      </div>
-
-      {/* Goal subtitle */}
-      <p className="mt-2 text-[15px]" style={{ color: colors.inkSoft }}>
-        Goal: {totalGoal.toLocaleString()} saves
-      </p>
-
-      {/* Divider */}
-      <div className="my-5 h-px w-full" style={{ backgroundColor: colors.border }} />
-
-      {/* Progress rings */}
-      <div className="grid grid-cols-3 gap-2">
-        <RingStat
-          color={blue}
-          trackColor={ringTrack}
-          icon={<IconBookmark size={16} stroke={2} style={{ color: blue }} />}
-          label="Saves"
-          value={saves}
-          goal={saveGoal}
-        />
-        <RingStat
-          color={green}
-          trackColor={ringTrack}
-          icon={<IconNote size={16} stroke={2} style={{ color: green }} />}
-          label="Notes"
-          value={notes}
-          goal={noteGoal}
-        />
-        <RingStat
-          color={orange}
-          trackColor={ringTrack}
-          icon={<IconFlame size={16} stroke={2} style={{ color: orange }} />}
-          label="Streak"
-          value={streak}
-          goal={7}
-          unit="d"
-        />
-      </div>
-    </div>
-  );
-}
-
-function RingStat({
-  color,
-  trackColor,
-  icon,
-  label,
-  value,
-  goal,
-  unit,
-}: {
-  color: string;
-  trackColor: string;
-  icon: React.ReactNode;
-  label: string;
-  value: number;
-  goal: number;
-  unit?: string;
-}) {
-  const { colors } = useAppColors();
-  const percent = goal > 0 ? value / goal : 0;
-  return (
-    <div className="flex flex-col items-center gap-2">
-      <ProgressRing percent={percent} color={color} trackColor={trackColor} />
-      <div className="flex items-center gap-1.5">
-        {icon}
-        <span className="text-[14px] font-medium" style={{ color: colors.text }}>
-          {label}
-        </span>
-      </div>
-      <span className="text-[13px]" style={{ color: colors.inkSoft }}>
-        {value}
-        {unit ?? ''}/{goal}
-        {unit ?? ''}
-      </span>
-    </div>
-  );
-}
+const PAGE_SIZE = 24;
 
 interface MainBookmarksViewProps {
   filter?: 'all' | 'starred';
 }
 
 type HomeFilter = 'all' | 'starred' | 'notes' | BookmarkSource;
+
+const ALWAYS_VISIBLE_FILTERS = new Set<HomeFilter>(['all', 'starred', 'notes', 'twitter', 'youtube']);
 
 const HOME_FILTERS: { id: HomeFilter; label: string }[] = [
   { id: 'all', label: 'All' },
@@ -227,6 +34,23 @@ const HOME_FILTERS: { id: HomeFilter; label: string }[] = [
   { id: 'article', label: 'Articles' },
   { id: 'other', label: 'Links' },
 ];
+
+function parseSourceFilter(raw: string | null): HomeFilter | null {
+  if (!raw) return null;
+  if (raw === 'x') return 'twitter';
+  if (
+    raw === 'starred' ||
+    raw === 'notes' ||
+    raw === 'youtube' ||
+    raw === 'twitter' ||
+    raw === 'tiktok' ||
+    raw === 'article' ||
+    raw === 'other'
+  ) {
+    return raw;
+  }
+  return null;
+}
 
 function filterBookmarks(bookmarks: Bookmark[], query: string) {
   const q = query.trim().toLowerCase();
@@ -261,17 +85,30 @@ function filterNotes(notes: Note[], query: string) {
 export function MainBookmarksView({ filter = 'all' }: MainBookmarksViewProps) {
   const { colors } = useAppColors();
   const { query, viewMode } = useAppSearch();
+  const searchParams = useSearchParams();
   const bookmarks = useAppStore((s) => s.bookmarks);
   const notes = useAppStore((s) => s.notes);
   const isLoading = useAppStore((s) => s.isLoading);
 
-  const [homeFilter, setHomeFilter] = useState<HomeFilter>(
-    filter === 'starred' ? 'starred' : 'all',
-  );
+  const sourceParam = searchParams.get('source');
+  const sourceFromUrl = parseSourceFilter(sourceParam);
 
+  const [homeFilter, setHomeFilter] = useState<HomeFilter>(
+    sourceFromUrl ?? (filter === 'starred' ? 'starred' : 'all'),
+  );
+  const [renderedCount, setRenderedCount] = useState(PAGE_SIZE);
   const isNotesFilter = homeFilter === 'notes';
 
-  const stats = useMemo(() => getSocialStats(bookmarks), [bookmarks]);
+  // Sidebar Import links change ?source= — apply that once per URL change, no remount loops
+  useEffect(() => {
+    if (!sourceFromUrl) return;
+    setHomeFilter(sourceFromUrl);
+    setRenderedCount(PAGE_SIZE);
+  }, [sourceFromUrl]);
+
+  useEffect(() => {
+    setRenderedCount(PAGE_SIZE);
+  }, [query, viewMode]);
 
   const notePreviews = useMemo(() => {
     const bookmarkById = new Map(bookmarks.map((bookmark) => [bookmark.id, bookmark]));
@@ -334,39 +171,40 @@ export function MainBookmarksView({ filter = 'all' }: MainBookmarksViewProps) {
     [homeFilter, visibleBookmarks],
   );
 
+  const unpinnedNotes = useMemo(
+    () =>
+      homeFilter === 'notes' && !query.trim()
+        ? visibleNotes.filter((note) => !note.isPinned)
+        : visibleNotes,
+    [homeFilter, query, visibleNotes],
+  );
+
   const visibleCount = isNotesFilter ? visibleNotes.length : visibleBookmarks.length;
+  const listToRender = isNotesFilter ? unpinnedNotes : unpinnedBookmarks;
+  const renderedItems = listToRender.slice(0, renderedCount);
+  const remaining = listToRender.length - renderedCount;
+  const hasMore = remaining > 0;
 
-  const [saveGoal, setSaveGoal] = useState(5);
-  const [noteGoal, setNoteGoal] = useState(3);
-  useEffect(() => {
-    setSaveGoal(readGoal(BOOKMARK_GOAL_KEY, 5));
-    setNoteGoal(readGoal(NOTE_GOAL_KEY, 3));
-  }, []);
+  // Keep existing cards visible while the first hydrate finishes in the background
+  const showInitialLoading = isLoading && bookmarks.length === 0 && notes.length === 0;
 
-  const weeklyTotals = useMemo(() => {
-    const weekStart = startOfWeek(new Date());
-    const savesThisWeek = bookmarks.filter(
-      (b) => new Date(`${b.dateAdded}T12:00:00`) >= weekStart,
-    ).length;
-    const notesThisWeek = notes.filter(
-      (n) => new Date(n.createdAt) >= weekStart,
-    ).length;
-    return { savesThisWeek, notesThisWeek };
-  }, [bookmarks, notes]);
+  function selectFilter(next: HomeFilter) {
+    setHomeFilter(next);
+    setRenderedCount(PAGE_SIZE);
+  }
 
   return (
     <div className="mx-auto w-full max-w-[1400px] px-4 py-5 md:px-6 md:py-6">
-      {/* Filter chips */}
       <div className="-mx-1 mb-6 flex gap-2 overflow-x-auto px-1 pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
         {HOME_FILTERS.map((f) => {
           const active = homeFilter === f.id;
           const count = counts[f.id];
-          if (f.id !== 'all' && f.id !== 'starred' && f.id !== 'notes' && count === 0) return null;
+          if (!ALWAYS_VISIBLE_FILTERS.has(f.id) && count === 0) return null;
           return (
             <button
               key={f.id}
               type="button"
-              onClick={() => setHomeFilter(f.id)}
+              onClick={() => selectFilter(f.id)}
               className={cn(
                 'flex shrink-0 items-center gap-1.5 rounded-full px-4 py-2 text-[13px] font-semibold transition hover:scale-[1.02]',
               )}
@@ -385,8 +223,7 @@ export function MainBookmarksView({ filter = 'all' }: MainBookmarksViewProps) {
         })}
       </div>
 
-      {/* Content */}
-      {isLoading ? (
+      {showInitialLoading ? (
         <p className="py-16 text-center text-sm" style={{ color: colors.inkSoft }}>
           Loading your shelf…
         </p>
@@ -410,15 +247,36 @@ export function MainBookmarksView({ filter = 'all' }: MainBookmarksViewProps) {
               ? 'Nothing matches that search'
               : isNotesFilter
                 ? 'No notes yet'
-                : 'Nothing here yet'}
+                : homeFilter === 'twitter'
+                  ? 'No X bookmarks yet'
+                  : homeFilter === 'youtube'
+                    ? 'No YouTube saves yet'
+                    : 'Nothing here yet'}
           </p>
           <p className="text-[13px]" style={{ color: colors.inkSoft }}>
             {query.trim()
               ? 'Try a different keyword or tag.'
               : isNotesFilter
                 ? 'Create your first note to see it here.'
-                : 'Save your first link — it belongs on this shelf.'}
+                : homeFilter === 'twitter'
+                  ? 'Connect and sync X in Settings to pull your bookmarks here.'
+                  : homeFilter === 'youtube'
+                    ? 'Connect and sync YouTube in Settings to pull your saves here.'
+                    : 'Save your first link — it belongs on this shelf.'}
           </p>
+          {(homeFilter === 'twitter' || homeFilter === 'youtube') && !query.trim() ? (
+            <Link
+              href={
+                homeFilter === 'twitter'
+                  ? '/app/settings#import-x'
+                  : '/app/settings#import-youtube'
+              }
+              className="mt-1 rounded-full px-4 py-2 text-[13px] font-semibold transition hover:-translate-y-0.5"
+              style={{ backgroundColor: colors.lavenderDeep, color: colors.text }}
+            >
+              Open import settings
+            </Link>
+          ) : null}
         </div>
       ) : isNotesFilter ? (
         <>
@@ -443,10 +301,7 @@ export function MainBookmarksView({ filter = 'all' }: MainBookmarksViewProps) {
             </section>
           ) : null}
           <div className="grid grid-cols-2 gap-4 md:grid-cols-3 xl:grid-cols-4">
-            {(homeFilter === 'notes' && !query.trim()
-              ? visibleNotes.filter((note) => !note.isPinned)
-              : visibleNotes
-            ).map((note, index) => (
+            {(renderedItems as Note[]).map((note, index) => (
               <NoteCard
                 key={note.id}
                 note={note}
@@ -455,6 +310,22 @@ export function MainBookmarksView({ filter = 'all' }: MainBookmarksViewProps) {
               />
             ))}
           </div>
+          {hasMore ? (
+            <div className="mt-6 flex justify-center">
+              <button
+                type="button"
+                onClick={() => setRenderedCount((n) => n + PAGE_SIZE)}
+                className="rounded-full px-5 py-2.5 font-poppins text-[13px] font-bold transition hover:-translate-y-0.5"
+                style={{
+                  backgroundColor: colors.lavenderDeep,
+                  color: colors.text,
+                  boxShadow: `0 2px 8px ${colors.cardShadow}`,
+                }}
+              >
+                Load more ({remaining} left)
+              </button>
+            </div>
+          ) : null}
         </>
       ) : (
         <>
@@ -484,26 +355,33 @@ export function MainBookmarksView({ filter = 'all' }: MainBookmarksViewProps) {
 
           {viewMode === 'list' ? (
             <div className="mx-auto flex max-w-3xl flex-col gap-2.5">
-              {unpinnedBookmarks.map((b, i) => (
+              {(renderedItems as Bookmark[]).map((b, i) => (
                 <KeepBookmarkCard key={b.id} bookmark={b} variant="list" index={i} />
               ))}
             </div>
           ) : (
             <div className="columns-1 gap-4 sm:columns-2 lg:columns-3 xl:columns-4">
-              {unpinnedBookmarks.map((b, i) => (
+              {(renderedItems as Bookmark[]).map((b, i) => (
                 <KeepBookmarkCard key={b.id} bookmark={b} variant="grid" index={i} />
               ))}
             </div>
           )}
-
-          {/* Weekly goal card */}
-          <WeeklyGoalCard
-            saves={weeklyTotals.savesThisWeek}
-            notes={weeklyTotals.notesThisWeek}
-            streak={stats.streak}
-            saveGoal={saveGoal}
-            noteGoal={noteGoal}
-          />
+          {hasMore ? (
+            <div className="mt-6 flex justify-center">
+              <button
+                type="button"
+                onClick={() => setRenderedCount((n) => n + PAGE_SIZE)}
+                className="rounded-full px-5 py-2.5 font-poppins text-[13px] font-bold transition hover:-translate-y-0.5"
+                style={{
+                  backgroundColor: colors.lavenderDeep,
+                  color: colors.text,
+                  boxShadow: `0 2px 8px ${colors.cardShadow}`,
+                }}
+              >
+                Load more ({remaining} left)
+              </button>
+            </div>
+          ) : null}
         </>
       )}
     </div>

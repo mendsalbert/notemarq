@@ -15,7 +15,8 @@ export const metadata = {
   description: 'Save posts from X, YouTube, TikTok, and the web with the Notemarq browser extension.',
 };
 
-const CHROME_EXTENSION_URL = 'https://chrome.google.com/webstore';
+const CHROME_EXTENSION_URL =
+  'https://chromewebstore.google.com/detail/mplejdgebegogkgpjhnfgngcficcmodn';
 const APP_STORE_URL = 'https://apps.apple.com/app/notemarq';
 
 const HOW_IT_WORKS = [

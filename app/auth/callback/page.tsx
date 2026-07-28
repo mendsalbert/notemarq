@@ -36,6 +36,16 @@ function AuthCallbackContent() {
         return;
       }
 
+      const code = queryParams.get('code');
+      if (code) {
+        const { error: exchangeError } = await supabase.auth.exchangeCodeForSession(code);
+        if (!mounted) return;
+        if (exchangeError) {
+          setError(describeSupabaseError(exchangeError));
+          return;
+        }
+      }
+
       const { data, error: sessionError } = await supabase.auth.getSession();
 
       if (!mounted) return;

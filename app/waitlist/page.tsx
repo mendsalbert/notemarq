@@ -57,12 +57,13 @@ export default function WaitlistPage() {
             >
               Home
             </Link>
-            <span
-              className="inline-flex items-center rounded-full px-5 py-2.5 text-sm font-semibold"
-              style={{ background: 'rgba(255,255,255,0.08)', color: SOFT, border: `1px solid ${BORDER}` }}
+            <Link
+              href={APP_ENTRY_HREF}
+              className="inline-flex items-center rounded-full px-5 py-2.5 text-sm font-semibold transition hover:opacity-90"
+              style={{ background: CORAL, color: '#FFFFFF' }}
             >
               {APP_ENTRY_LABEL}
-            </span>
+            </Link>
           </div>
         </nav>
       </header>

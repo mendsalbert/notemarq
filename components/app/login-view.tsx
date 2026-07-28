@@ -2,12 +2,13 @@
 
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import Image from 'next/image';
 
 import { GoogleSignInButton } from '@/components/google-sign-in-button';
 import { useAuth } from '@/contexts/auth-provider';
 import { useAppColors } from '@/hooks/use-app-colors';
+import { getGoogleWebClientId } from '@/lib/google-client-id';
 import { forkPublicIdeaBoard } from '@/lib/supabase/publicBoards';
 
 export function LoginView() {
@@ -19,6 +20,7 @@ export function LoginView() {
   const returnTo = searchParams.get('returnTo') ?? '/app';
   const [error, setError] = useState('');
   const [submitting, setSubmitting] = useState(false);
+  const googleConfigured = Boolean(getGoogleWebClientId());
 
   useEffect(() => {
     if (isLoading || !user) return;
@@ -38,16 +40,24 @@ export function LoginView() {
     })();
   }, [user, isLoading, forkId, returnTo, router]);
 
-  async function handleGoogleCredential(idToken: string) {
-    setSubmitting(true);
-    setError('');
-    try {
-      await signInWithGoogleIdToken(idToken);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Sign-in failed');
-      setSubmitting(false);
-    }
-  }
+  const handleCredential = useCallback(
+    async (idToken: string) => {
+      setSubmitting(true);
+      setError('');
+      try {
+        await signInWithGoogleIdToken(idToken);
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'Sign-in failed');
+        setSubmitting(false);
+      }
+    },
+    [signInWithGoogleIdToken],
+  );
+
+  const handleGoogleError = useCallback((message: string) => {
+    setError(message);
+    setSubmitting(false);
+  }, []);
 
   if (isLoading || user) {
     return (
@@ -82,25 +92,23 @@ export function LoginView() {
           <p className="rounded-xl bg-amber-500/10 px-4 py-3 text-sm text-amber-600 dark:text-amber-400">
             Add NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY to website/.env.local
           </p>
+        ) : !googleConfigured ? (
+          <p className="rounded-xl bg-amber-500/10 px-4 py-3 text-sm text-amber-600 dark:text-amber-400">
+            Add NEXT_PUBLIC_GOOGLE_WEB_CLIENT_ID to website/.env.local
+          </p>
         ) : (
           <GoogleSignInButton
             disabled={submitting}
-            onCredential={handleGoogleCredential}
-            onError={(message) => {
-              setError(message);
-              setSubmitting(false);
-            }}
+            onCredential={(idToken) => void handleCredential(idToken)}
+            onError={handleGoogleError}
             className="w-full"
-            style={{ backgroundColor: colors.coral, borderRadius: 9999 }}
           >
-            <button
-              type="button"
-              disabled={submitting}
-              className="flex w-full items-center justify-center gap-3 rounded-full px-4 py-3.5 font-poppins text-sm font-bold text-white transition hover:opacity-95 disabled:opacity-60"
+            <div
+              className="flex w-full items-center justify-center gap-3 rounded-full px-4 py-3.5 font-poppins text-sm font-bold text-white transition hover:opacity-95"
               style={{ backgroundColor: colors.coral }}
             >
-              Continue with Google
-            </button>
+              {submitting ? 'Signing in…' : 'Continue with Google'}
+            </div>
           </GoogleSignInButton>
         )}
 

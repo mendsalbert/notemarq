@@ -14,6 +14,7 @@ interface AuthContextValue {
   user: User | null;
   isLoading: boolean;
   isConfigured: boolean;
+  signInWithGoogle: (redirectTo?: string) => Promise<void>;
   signInWithGoogleIdToken: (idToken: string) => Promise<void>;
   signOut: () => Promise<void>;
 }
@@ -91,6 +92,23 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     reset();
   }, [user?.id, isLoading, hydrate, reset]);
 
+  const signInWithGoogle = useCallback(async (redirectTo = '/app') => {
+    const next = redirectTo.startsWith('/') && !redirectTo.startsWith('//') ? redirectTo : '/app';
+    const callbackUrl = new URL('/auth/callback', window.location.origin);
+    callbackUrl.searchParams.set('next', next);
+
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: 'google',
+      options: {
+        redirectTo: callbackUrl.toString(),
+        queryParams: {
+          prompt: 'select_account',
+        },
+      },
+    });
+    if (error) throw error;
+  }, []);
+
   const signInWithGoogleIdToken = useCallback(async (idToken: string) => {
     const { error } = await supabase.auth.signInWithIdToken({
       provider: 'google',
@@ -117,10 +135,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       user,
       isLoading,
       isConfigured: isSupabaseConfigured,
+      signInWithGoogle,
       signInWithGoogleIdToken,
       signOut,
     }),
-    [session, user, isLoading, signInWithGoogleIdToken, signOut],
+    [session, user, isLoading, signInWithGoogle, signInWithGoogleIdToken, signOut],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
