@@ -8,13 +8,20 @@ interface PricingCheckoutButtonProps {
   plan: PaidPlanId;
   label: string;
   highlight?: boolean;
+  disabled?: boolean;
 }
 
-export function PricingCheckoutButton({ plan, label, highlight }: PricingCheckoutButtonProps) {
+export function PricingCheckoutButton({
+  plan,
+  label,
+  highlight,
+  disabled = false,
+}: PricingCheckoutButtonProps) {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   async function onClick() {
+    if (disabled) return;
     setError(null);
 
     if (!isSupabaseConfigured) {
@@ -27,7 +34,7 @@ export function PricingCheckoutButton({ plan, label, highlight }: PricingCheckou
     } = await supabase.auth.getSession();
 
     if (!session?.user) {
-      window.location.href = `/app/login?next=${encodeURIComponent('/pricing')}`;
+      window.location.href = `/app/login?returnTo=${encodeURIComponent('/pricing')}`;
       return;
     }
 
@@ -52,17 +59,17 @@ export function PricingCheckoutButton({ plan, label, highlight }: PricingCheckou
       <button
         type="button"
         onClick={() => void onClick()}
-        disabled={busy}
+        disabled={busy || disabled}
         style={{
           textAlign: 'center',
-          background: highlight ? '#22D3EE' : '#fff',
-          color: '#000',
+          background: disabled ? '#1F1F1F' : highlight ? '#22D3EE' : '#fff',
+          color: disabled ? 'rgba(255,255,255,0.55)' : '#000',
           padding: '12px 14px',
           borderRadius: 999,
           fontWeight: 700,
-          border: 'none',
+          border: disabled ? '1px solid #2A2A2A' : 'none',
           fontSize: 14,
-          cursor: busy ? 'wait' : 'pointer',
+          cursor: disabled ? 'default' : busy ? 'wait' : 'pointer',
           opacity: busy ? 0.7 : 1,
           fontFamily: 'inherit',
         }}

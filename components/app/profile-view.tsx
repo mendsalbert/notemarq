@@ -13,6 +13,7 @@ import {
 import { useAuth } from '@/contexts/auth-provider';
 import { useAppColors } from '@/hooks/use-app-colors';
 import { useUserPlan } from '@/hooks/use-user-plan';
+import { ManageBillingButton } from '@/components/manage-billing-button';
 import { appContentClass } from '@/lib/app-layout';
 import { isPaidPlan, planDisplayName } from '@/lib/plan';
 import { cn } from '@/lib/utils';
@@ -56,7 +57,7 @@ function ActionRow({
 export function ProfileView() {
   const { user, signOut } = useAuth();
   const { colors } = useAppColors();
-  const { plan, isPaid } = useUserPlan();
+  const { plan, isPaid, hasWebSubscription } = useUserPlan();
 
   const name =
     (user?.user_metadata?.full_name as string | undefined) ??
@@ -158,6 +159,26 @@ export function ProfileView() {
               : 'From $4.99/mo · more each month'
           }
         />
+        {isPaid && hasWebSubscription ? (
+          <>
+            <div className="ml-[52px] h-px" style={{ backgroundColor: colors.border }} />
+            <div className="px-4 py-3">
+              <ManageBillingButton
+                label="Cancel subscription"
+                className="w-full rounded-full px-4 py-2.5 font-poppins text-[13px] font-semibold transition hover:opacity-90"
+                style={{
+                  backgroundColor: colors.blushDeep,
+                  color: colors.danger,
+                  border: `1px solid ${colors.border}`,
+                  cursor: 'pointer',
+                }}
+              />
+              <p className="mt-2 font-poppins text-[11px]" style={{ color: colors.inkSoft }}>
+                Opens Stripe to cancel or update payment. Access continues until the period ends.
+              </p>
+            </div>
+          </>
+        ) : null}
       </div>
 
       <p

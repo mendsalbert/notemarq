@@ -10,6 +10,7 @@ export async function POST(request: Request) {
     const body = await request.json();
     const url = typeof body.url === 'string' ? body.url.trim() : '';
     const includeContext = Boolean(body.includeContext);
+    const authHeader = request.headers.get('Authorization');
 
     if (!url) {
       return NextResponse.json({ error: 'Missing url' }, { status: 400 });
@@ -22,18 +23,30 @@ export async function POST(request: Request) {
           headers: {
             'Content-Type': 'application/json',
             apikey: supabaseKey,
-            Authorization: `Bearer ${supabaseKey}`,
+            Authorization: authHeader?.startsWith('Bearer ')
+              ? authHeader
+              : `Bearer ${supabaseKey}`,
           },
           body: JSON.stringify({ url, includeContext }),
         });
 
         const data = await res.json();
+        if (res.status === 402 || res.status === 401) {
+          return NextResponse.json(data, { status: res.status });
+        }
         if (res.ok && data?.title) {
           return NextResponse.json(data);
         }
       } catch {
         /* fall through to local enrichment */
       }
+    }
+
+    if (includeContext) {
+      return NextResponse.json(
+        { error: 'AI Suggest requires a configured backend. Try again later.' },
+        { status: 503 },
+      );
     }
 
     const local = await enrichLinkLocally(url);

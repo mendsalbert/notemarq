@@ -1,62 +1,11 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
-import { PricingCheckoutButton } from '@/components/pricing-checkout-button';
-import type { PaidPlanId } from '@/lib/stripe/checkout';
+import { PricingPlans } from '@/components/pricing-plans';
 
 export const metadata: Metadata = {
   title: 'Pricing — Notemarq',
   description: 'Choose Notemarq Plus, Pro, or Super Pro. Sync your saves and unlock smarter AI features.',
 };
-
-const TIERS: {
-  plan: PaidPlanId;
-  name: string;
-  price: string;
-  period: string;
-  tagline: string;
-  features: string[];
-  highlight: boolean;
-}[] = [
-  {
-    plan: 'plus',
-    name: 'Plus',
-    price: '$4.99',
-    period: '/ month',
-    tagline: 'More power for everyday saving',
-    features: [
-      'Higher X / YouTube import limits',
-      '50 Ask / Suggest / Auto organize per month',
-      'Sync across all devices',
-    ],
-    highlight: false,
-  },
-  {
-    plan: 'pro',
-    name: 'Pro',
-    price: '$9.99',
-    period: '/ month',
-    tagline: 'For power users who save constantly',
-    features: [
-      '500 bookmarks per sync',
-      '80 AI uses per month',
-      'Weekly digest & priority support',
-    ],
-    highlight: true,
-  },
-  {
-    plan: 'super_pro',
-    name: 'Super Pro',
-    price: '$17.99',
-    period: '/ month',
-    tagline: 'Unlimited smart features',
-    features: [
-      'Unlimited Ask, Suggest & Auto organize',
-      'Unlimited imports',
-      'Shared folders & early access',
-    ],
-    highlight: false,
-  },
-];
 
 type PageProps = {
   searchParams?: Promise<Record<string, string | string[] | undefined>>;
@@ -163,63 +112,7 @@ export default async function PricingPage({ searchParams }: PageProps) {
         )}
 
         <section id="plans" style={{ marginTop: 40 }}>
-          <div
-            style={{
-              display: 'grid',
-              gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))',
-              gap: 16,
-            }}
-          >
-            {TIERS.map((tier) => (
-              <article
-                key={tier.plan}
-                style={{
-                  background: tier.highlight ? '#1A1828' : '#141414',
-                  border: tier.highlight ? '1px solid #3A3560' : '1px solid #1F1F1F',
-                  borderRadius: 20,
-                  padding: 22,
-                  display: 'flex',
-                  flexDirection: 'column',
-                  gap: 14,
-                }}
-              >
-                <div>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                    <h2 style={{ fontSize: 20, margin: 0 }}>{tier.name}</h2>
-                    {tier.highlight ? (
-                      <span
-                        style={{
-                          fontSize: 11,
-                          fontWeight: 700,
-                          color: '#A99AF0',
-                          background: 'rgba(169,154,240,0.15)',
-                          padding: '3px 8px',
-                          borderRadius: 999,
-                        }}
-                      >
-                        Popular
-                      </span>
-                    ) : null}
-                  </div>
-                  <p style={{ color: 'rgba(255,255,255,0.55)', fontSize: 13, margin: '6px 0 0' }}>{tier.tagline}</p>
-                </div>
-                <p style={{ margin: 0 }}>
-                  <span style={{ fontSize: 32, fontWeight: 800, letterSpacing: '-0.03em' }}>{tier.price}</span>
-                  <span style={{ color: 'rgba(255,255,255,0.45)', fontSize: 14 }}> {tier.period}</span>
-                </p>
-                <ul style={{ margin: 0, paddingLeft: 18, color: 'rgba(255,255,255,0.72)', fontSize: 14, lineHeight: 1.55 }}>
-                  {tier.features.map((feature) => (
-                    <li key={feature}>{feature}</li>
-                  ))}
-                </ul>
-                <PricingCheckoutButton
-                  plan={tier.plan}
-                  label={`Get ${tier.name}`}
-                  highlight={tier.highlight}
-                />
-              </article>
-            ))}
-          </div>
+          <PricingPlans />
           <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: 13, marginTop: 24, lineHeight: 1.5 }}>
             Checkout is powered by Stripe. iOS subscriptions are handled through the App Store.
           </p>

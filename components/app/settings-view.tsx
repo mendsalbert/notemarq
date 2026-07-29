@@ -25,6 +25,7 @@ import { Suspense, useCallback, useEffect, useRef, useState } from 'react';
 import { useAuth } from '@/contexts/auth-provider';
 import { useAppColors } from '@/hooks/use-app-colors';
 import { useUserPlan } from '@/hooks/use-user-plan';
+import { ManageBillingButton } from '@/components/manage-billing-button';
 import { appContentClass } from '@/lib/app-layout';
 import { planDisplayName } from '@/lib/plan';
 import { isSupabaseConfigured, supabase } from '@/lib/supabase/client';
@@ -757,7 +758,7 @@ function ImportsSection() {
 function SettingsBody() {
   const { colors } = useAppColors();
   const { signOut } = useAuth();
-  const { plan, isPaid } = useUserPlan();
+  const { plan, isPaid, hasWebSubscription } = useUserPlan();
 
   const [weeklyBookmarkGoal, setWeeklyBookmarkGoal] = useState(5);
   const [weeklyNoteGoal, setWeeklyNoteGoal] = useState(3);
@@ -802,6 +803,23 @@ function SettingsBody() {
             }
             href="/pricing"
           />
+          {isPaid && hasWebSubscription ? (
+            <>
+              <Divider />
+              <div className="px-4 py-3">
+                <ManageBillingButton
+                  label="Cancel subscription"
+                  className="w-full rounded-full px-4 py-2.5 font-poppins text-[13px] font-semibold transition hover:opacity-90"
+                  style={{
+                    backgroundColor: colors.blushDeep,
+                    color: colors.danger,
+                    border: `1px solid ${colors.border}`,
+                    cursor: 'pointer',
+                  }}
+                />
+              </div>
+            </>
+          ) : null}
           <Divider />
           <SettingsRow
             icon={<IconPuzzle size={18} stroke={2} style={{ color: colors.text }} />}

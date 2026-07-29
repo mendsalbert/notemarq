@@ -11,6 +11,18 @@ export interface StripeCheckoutResult {
   sessionId?: string;
 }
 
+async function readFunctionError(error: unknown): Promise<string | null> {
+  const context = (error as { context?: Response })?.context;
+  if (!context || typeof context.json !== 'function') return null;
+  try {
+    const payload = (await context.json()) as { error?: string };
+    if (payload?.error) return String(payload.error);
+  } catch {
+    /* ignore */
+  }
+  return null;
+}
+
 export async function createStripeCheckout(input: {
   plan: PaidPlanId;
   billing?: BillingInterval;
@@ -39,7 +51,8 @@ export async function createStripeCheckout(input: {
   });
 
   if (error) {
-    throw new Error(error.message || 'Could not start checkout');
+    const detailed = await readFunctionError(error);
+    throw new Error(detailed || error.message || 'Could not start checkout');
   }
 
   const payload = (data ?? {}) as Record<string, unknown>;

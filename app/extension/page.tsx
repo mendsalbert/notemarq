@@ -12,37 +12,41 @@ import { APP_ENTRY_HREF, APP_ENTRY_LABEL } from '@/lib/marketing';
 
 export const metadata = {
   title: 'Browser Extension — Notemarq',
-  description: 'Save posts from X, YouTube, TikTok, and the web with the Notemarq browser extension.',
+  description:
+    'Save from X, YouTube, TikTok, and any webpage with the Notemarq browser extension.',
 };
 
 const CHROME_EXTENSION_URL =
   'https://chromewebstore.google.com/detail/mplejdgebegogkgpjhnfgngcficcmodn';
-const APP_STORE_URL = 'https://apps.apple.com/app/notemarq';
 
 const HOW_IT_WORKS = [
   {
     step: '01',
     title: 'Install & sign in',
-    description: 'Add the extension from the Chrome Web Store, then sign in with Google in the popup.',
-    imageFile: 'step-1-install.png',
+    description:
+      'Add the extension from the Chrome Web Store, then sign in with Google in the popup.',
+    imageFile: 'step-1-install.jpg',
   },
   {
     step: '02',
-    title: 'Open a post on X',
-    description: 'Browse your feed as usual. When you find something worth keeping, tap the bookmark icon.',
-    imageFile: 'step-2-bookmark.png',
+    title: 'Save from anywhere',
+    description:
+      'On X, YouTube, TikTok, or any webpage — open what you want to keep and tap save.',
+    imageFile: 'step-2-anywhere.jpg',
   },
   {
     step: '03',
     title: 'Save with context',
-    description: "Notemarq opens a save sheet. Add a note about why you're saving, or skip and sync instantly.",
-    imageFile: 'step-3-save-sheet.png',
+    description:
+      "Notemarq opens a save sheet. Add why it matters, hit Suggest, or skip and sync instantly.",
+    imageFile: 'step-3-save-sheet.jpg',
   },
   {
     step: '04',
     title: 'Find it later',
-    description: 'Your saves sync to the web and mobile library — search, folders, and smart recall included.',
-    imageFile: 'step-4-library.png',
+    description:
+      'Your saves sync to the web and mobile library — search, folders, and smart recall included.',
+    imageFile: 'step-4-library.jpg',
   },
 ] as const;
 
@@ -65,11 +69,11 @@ export default function ExtensionPage() {
           Browser extension
         </p>
         <h1 className="font-poppins text-3xl font-bold leading-tight tracking-tight md:text-4xl">
-          Save from X without leaving your feed
+          Save from X, YouTube, TikTok &amp; the web
         </h1>
         <p className="mt-4 max-w-xl text-base leading-relaxed text-[#6b7280]">
-          The Notemarq extension turns the bookmark button on X into a save with context. Your saves sync
-          to the same library as the mobile app and web dashboard.
+          The Notemarq extension captures posts, videos, and pages with context — without leaving
+          the tab. Everything syncs to the same library as the mobile app and web dashboard.
         </p>
 
         <section className="mt-12">
@@ -99,11 +103,11 @@ export default function ExtensionPage() {
             <div className="mb-4 flex h-10 w-10 items-center justify-center rounded-2xl bg-[#E0F7FA] text-[#0891B2]">
               <IconBookmark size={20} stroke={2} />
             </div>
-            <h2 className="font-poppins text-lg font-semibold">How to save on X</h2>
+            <h2 className="font-poppins text-lg font-semibold">How to save</h2>
             <ol className="mt-3 space-y-2 text-sm leading-relaxed text-[#6b7280]">
               <li>1. Sign in with Google in the extension popup.</li>
-              <li>2. Open any post on X.</li>
-              <li>3. Tap the bookmark icon — Notemarq opens a save sheet.</li>
+              <li>2. Open a post, video, or page on X, YouTube, TikTok, or the web.</li>
+              <li>3. Tap save — Notemarq opens a save sheet.</li>
               <li>4. Add why you&apos;re saving, or skip and sync instantly.</li>
             </ol>
           </div>
@@ -124,15 +128,13 @@ export default function ExtensionPage() {
               >
                 {APP_ENTRY_LABEL}
               </Link>
-              <a
-                href={APP_STORE_URL}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex items-center justify-center gap-2 rounded-full border border-[#e5e7eb] bg-white px-5 py-3 text-sm font-semibold text-[#1c1c2e] transition hover:bg-[#fafafa]"
+              <span
+                className="inline-flex cursor-default items-center justify-center gap-2 rounded-full border border-[#e5e7eb] bg-white px-5 py-3 text-sm font-semibold text-[#1c1c2e] opacity-80"
+                aria-label="Mobile app — coming soon"
               >
                 <IconDeviceMobile size={18} stroke={2} />
-                Get mobile app
-              </a>
+                Mobile app — coming soon
+              </span>
             </div>
           </div>
 

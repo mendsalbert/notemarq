@@ -54,7 +54,6 @@ const CYAN = '#22D3EE';
 const SUCCESS = '#30D158';
 const WEEK_ACTIVE = '#E8B84A';
 
-const APP_STORE_URL = 'https://apps.apple.com';
 const CHROME_EXTENSION_URL = 'https://chrome.google.com/webstore';
 
 const STORE_ICON_SIZE = 22;
@@ -116,29 +115,53 @@ function StoreButton({
   icon,
   label,
   title,
+  comingSoon = false,
 }: {
-  href: string;
+  href?: string;
   icon: React.ReactNode;
   label: string;
   title: string;
+  comingSoon?: boolean;
 }) {
-  return (
-    <a
-      href={href}
-      target="_blank"
-      rel="noopener noreferrer"
-      className="inline-flex items-center gap-2.5 rounded-full px-5 py-2.5 transition hover:-translate-y-0.5 hover:opacity-95"
-      style={{
-        background: '#FFFFFF',
-        color: INK,
-        boxShadow: '0 6px 18px rgba(0,0,0,0.3)',
-      }}
-    >
+  const className =
+    'inline-flex items-center gap-2.5 rounded-full px-5 py-2.5 transition';
+  const style = {
+    background: '#FFFFFF',
+    color: INK,
+    boxShadow: '0 6px 18px rgba(0,0,0,0.3)',
+  } as const;
+
+  const content = (
+    <>
       {icon}
       <div className="text-left">
         <div className="text-[9px] font-medium leading-none opacity-55">{label}</div>
         <div className="text-[12px] font-semibold leading-tight">{title}</div>
       </div>
+    </>
+  );
+
+  if (comingSoon || !href) {
+    return (
+      <span
+        className={`${className} cursor-default opacity-90`}
+        style={style}
+        aria-label={`${title} — coming soon`}
+      >
+        {content}
+      </span>
+    );
+  }
+
+  return (
+    <a
+      href={href}
+      target="_blank"
+      rel="noopener noreferrer"
+      className={`${className} hover:-translate-y-0.5 hover:opacity-95`}
+      style={style}
+    >
+      {content}
     </a>
   );
 }
@@ -148,7 +171,12 @@ function DownloadLinks({ className = '' }: { className?: string }) {
     <div
       className={`flex flex-col items-center justify-center gap-2.5 sm:flex-row sm:flex-wrap sm:gap-3 ${className}`}
     >
-      <StoreButton href={APP_STORE_URL} label="Download on the" title="App Store" icon={APP_STORE_ICON} />
+      <StoreButton
+        comingSoon
+        label="Coming soon on the"
+        title="App Store"
+        icon={APP_STORE_ICON}
+      />
       <StoreButton
         href={CHROME_EXTENSION_URL}
         label="Available on the"
@@ -248,13 +276,6 @@ function LandingNavbar() {
 
           <div className="flex items-center gap-2">
             <a
-              href="/waitlist"
-              className="hidden items-center rounded-full px-4 py-2.5 text-sm font-medium transition hover:bg-white/10 sm:inline-flex"
-              style={{ color: TEXT }}
-            >
-              Early access
-            </a>
-            <a
               href={APP_ENTRY_HREF}
               className="hidden items-center gap-2 rounded-full px-5 py-2.5 text-sm font-semibold transition hover:opacity-90 sm:inline-flex"
               style={{ background: CORAL, color: '#FFFFFF' }}
@@ -291,14 +312,6 @@ function LandingNavbar() {
                 {link.label}
               </a>
             ))}
-            <a
-              href="/waitlist"
-              className="mt-1 flex items-center justify-center rounded-full px-4 py-3 text-sm font-medium"
-              style={{ border: `1px solid ${BORDER}`, color: TEXT }}
-              onClick={closeMobile}
-            >
-              Early access
-            </a>
             <a
               href={APP_ENTRY_HREF}
               className="mt-1 flex items-center justify-center rounded-full px-4 py-3 text-sm font-semibold"
@@ -782,7 +795,7 @@ export default function LandingPage() {
                 }}
               >
                 <Image
-                  src="/sync-across-all-dev.png"
+                  src="/screenshot/sync-a-a-d.png"
                   alt="Notemarq on phone, laptop, and tablet — synced across all devices"
                   width={6000}
                   height={4171}
@@ -794,10 +807,10 @@ export default function LandingPage() {
             <Reveal delay={200}>
               <div className="mt-8 flex flex-wrap items-center justify-center gap-3 sm:gap-4">
                 {[
-                  { label: 'iPhone', icon: IconDeviceMobile },
-                  { label: 'Mac & Windows', icon: IconDeviceLaptop },
-                  { label: 'iPad & tablet', icon: IconDeviceTablet },
-                ].map(({ label, icon: Icon }) => (
+                  { label: 'iPhone', icon: IconDeviceMobile, comingSoon: true },
+                  { label: 'Mac & Windows', icon: IconDeviceLaptop, comingSoon: false },
+                  { label: 'iPad & tablet', icon: IconDeviceTablet, comingSoon: true },
+                ].map(({ label, icon: Icon, comingSoon }) => (
                   <span
                     key={label}
                     className="inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm font-medium"
@@ -805,6 +818,14 @@ export default function LandingPage() {
                   >
                     <Icon size={16} stroke={1.8} style={{ color: TAG_PURPLE }} />
                     {label}
+                    {comingSoon ? (
+                      <span
+                        className="rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider"
+                        style={{ background: LAVENDER_DEEP, color: TAG_PURPLE }}
+                      >
+                        Soon
+                      </span>
+                    ) : null}
                   </span>
                 ))}
               </div>
@@ -943,7 +964,6 @@ export default function LandingPage() {
             <nav className="flex flex-wrap items-center justify-center gap-1">
               {[
                 ...NAV_LINKS,
-                { href: '/waitlist', label: 'Early access', id: 'waitlist-page' },
                 { href: APP_ENTRY_HREF, label: APP_ENTRY_LABEL, id: 'app' },
                 { href: '/policy', label: 'Privacy', id: 'policy' },
                 { href: '/terms', label: 'Terms', id: 'terms' },

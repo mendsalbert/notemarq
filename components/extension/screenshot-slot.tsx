@@ -15,7 +15,13 @@ export function ScreenshotSlot({
   const [status, setStatus] = useState<'loading' | 'ready' | 'missing'>('loading');
 
   return (
-    <div className="relative mt-5 overflow-hidden rounded-2xl border border-dashed border-[#d1d5db] bg-gradient-to-b from-[#f3f4f6] to-[#e8eaed]">
+    <div
+      className={`relative mt-5 overflow-hidden rounded-2xl ${
+        status === 'ready'
+          ? 'border border-[#e5e7eb] bg-white shadow-[0_8px_30px_rgba(0,0,0,0.06)]'
+          : 'border border-dashed border-[#d1d5db] bg-gradient-to-b from-[#f3f4f6] to-[#e8eaed]'
+      }`}
+    >
       <div className="relative aspect-[16/10] w-full">
         {status !== 'missing' && (
           <Image

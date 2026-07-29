@@ -174,7 +174,7 @@ function AppSidebarInner({ onAddBookmark, onAddNote, onNavigate, className }: Ap
           onClick={onNavigate}
         >
           <span
-            className="font-[family-name:var(--font-nunito)] text-2xl font-bold tracking-tight"
+            className="font-poppins text-2xl font-bold tracking-tight"
             style={{ color: '#FFFFFF' }}
           >
             notemarq
@@ -195,7 +195,7 @@ function AppSidebarInner({ onAddBookmark, onAddNote, onNavigate, className }: Ap
         onClick={onNavigate}
       >
         <span
-          className="font-[family-name:var(--font-nunito)] text-xl font-bold tracking-tight"
+          className="font-poppins text-xl font-bold tracking-tight"
           style={{ color: '#FFFFFF' }}
         >
           notemarq

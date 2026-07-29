@@ -14,8 +14,10 @@ import {
 
 import { useAuth } from '@/contexts/auth-provider';
 import { useAppColors } from '@/hooks/use-app-colors';
+import { usePlanEntitlements } from '@/hooks/use-plan-entitlements';
 import { useAppStore } from '@/store/app-store';
 import { youtubeThumbnailUrl } from '@/lib/link-enrichment';
+import { isSupabaseConfigured, supabase } from '@/lib/supabase/client';
 import type { BookmarkSource } from '@/lib/types';
 
 function detectSource(url: string): BookmarkSource {
@@ -74,18 +76,40 @@ function withInstantPreview(url: string, data: EnrichedLink | null): EnrichedLin
   };
 }
 
-async function fetchLinkEnrichment(url: string, includeContext: boolean): Promise<EnrichedLink | null> {
+async function fetchLinkEnrichment(
+  url: string,
+  includeContext: boolean,
+): Promise<{ data: EnrichedLink | null; error?: string; code?: string }> {
   try {
+    const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+    if (includeContext && isSupabaseConfigured) {
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+      if (session?.access_token) {
+        headers.Authorization = `Bearer ${session.access_token}`;
+      }
+    }
+
     const res = await fetch('/api/enrich-link', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers,
       body: JSON.stringify({ url, includeContext }),
     });
-    if (!res.ok) return withInstantPreview(url, null);
-    const data = (await res.json()) as EnrichedLink;
-    return withInstantPreview(url, data);
+    const payload = (await res.json().catch(() => ({}))) as EnrichedLink & {
+      error?: string;
+      code?: string;
+    };
+    if (!res.ok) {
+      return {
+        data: withInstantPreview(url, null),
+        error: payload.error || 'Suggest failed',
+        code: payload.code,
+      };
+    }
+    return { data: withInstantPreview(url, payload) };
   } catch {
-    return withInstantPreview(url, null);
+    return { data: withInstantPreview(url, null), error: 'Suggest failed' };
   }
 }
 
@@ -97,6 +121,7 @@ interface AddBookmarkDialogProps {
 export function AddBookmarkDialog({ open, onClose }: AddBookmarkDialogProps) {
   const { user } = useAuth();
   const { colors } = useAppColors();
+  const { ensureFeature, recordFeatureUse } = usePlanEntitlements();
   const addBookmark = useAppStore((s) => s.addBookmark);
 
   const [url, setUrl] = useState('');
@@ -150,7 +175,7 @@ export function AddBookmarkDialog({ open, onClose }: AddBookmarkDialogProps) {
     enrichTimerRef.current = setTimeout(() => {
       void (async () => {
         try {
-          const data = await fetchLinkEnrichment(normalized, false);
+          const { data } = await fetchLinkEnrichment(normalized, false);
           setEnriched(data);
         } finally {
           setFetching(false);
@@ -171,11 +196,18 @@ export function AddBookmarkDialog({ open, onClose }: AddBookmarkDialogProps) {
       setError('Paste a URL first');
       return;
     }
+    if (!ensureFeature('ai_suggest')) return;
+
     setGenerating(true);
     setError('');
     try {
-      const data = await fetchLinkEnrichment(normalized, true);
-      if (!data) throw new Error('Could not generate suggestions');
+      const { data, error: suggestError, code } = await fetchLinkEnrichment(normalized, true);
+      if (code === 'plan_limit') {
+        setError(suggestError || 'Monthly Suggest limit reached. Upgrade for more.');
+        return;
+      }
+      if (!data) throw new Error(suggestError || 'Could not generate suggestions');
+      recordFeatureUse('ai_suggest');
       setEnriched(data);
       if (data.saveReason) setSaveReason(data.saveReason);
       if (data.personalContext) setPersonalContext(data.personalContext);
@@ -199,7 +231,7 @@ export function AddBookmarkDialog({ open, onClose }: AddBookmarkDialogProps) {
     try {
       const meta = withInstantPreview(
         normalized,
-        enriched ?? (await fetchLinkEnrichment(normalized, false)),
+        enriched ?? (await fetchLinkEnrichment(normalized, false)).data,
       );
       await addBookmark(user.id, {
         url: normalized,
