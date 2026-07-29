@@ -199,10 +199,10 @@ export function ProfileView() {
         />
         <div className="ml-[52px] h-px" style={{ backgroundColor: colors.border }} />
         <ActionRow
-          href="mailto:hello@notemarq.app?subject=Feature%20request"
+          href="/app/feature-requests"
           icon={<IconBulb size={18} stroke={2} style={{ color: colors.text }} />}
           label="Feature requests"
-          subtitle="Tell us what to build next"
+          subtitle="Suggest ideas and vote on what to build next"
         />
       </div>
 

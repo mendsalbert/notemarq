@@ -4,6 +4,7 @@ import {
   IconBrandX,
   IconBrandYoutube,
   IconBookmark,
+  IconBulb,
   IconCamera,
   IconCheck,
   IconChevronRight,
@@ -827,6 +828,14 @@ function SettingsBody() {
             label="Browser extension"
             hint="Save links from Chrome or Safari"
             href="/extension"
+          />
+          <Divider />
+          <SettingsRow
+            icon={<IconBulb size={18} stroke={2} style={{ color: colors.text }} />}
+            iconBg={colors.peach}
+            label="Feature requests"
+            hint="Suggest ideas and vote on what to build next"
+            href="/app/feature-requests"
           />
         </SettingsCard>
 
